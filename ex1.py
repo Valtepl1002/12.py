@@ -102,7 +102,7 @@ try:
     
     m.Maximize(product_yield)
     m.Equation(energy_consumption <= 1000)
-  m.solve(disp=False)
+    m.solve(disp=False)
     
     print("GEKKO - Успішно")
     print(f"Оптимальна температура: {temperature.value[0]:.2f} K")
