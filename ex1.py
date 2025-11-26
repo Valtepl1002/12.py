@@ -72,7 +72,7 @@ try:
     prob += x12 + x22 >= 150, "Store2_Demand"
     prob += x11 + x12 <= 120, "Warehouse1_Capacity"
     prob += x21 + x22 <= 200, "Warehouse2_Capacity"
-    prob.solve()
+    prob.solve(pulp.PULP_CBC_CMD(msg=0))
     
     print("PuLP - Успішно")
     print(f"Статус: {LpStatus[prob.status]}")
