@@ -1,0 +1,7 @@
+scipy>=1.8.0
+cvxpy>=1.2.0
+pulp>=2.6.0
+gekko>=1.0.5
+pyomo>=6.4.0
+numpy>=1.21.0
+matplotlib>=3.5.0
