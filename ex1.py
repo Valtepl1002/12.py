@@ -130,10 +130,19 @@ try:
                 for h in hours)
     )
     
-    def comfort_rule(model, h):
-        return model.heating[h] >= 20 and model.cooling[h] >= 15
+    def heating_comfort_rule(model, h):
+        return model.heating[h] >= 20
     
-    model.comfort = Constraint(hours, rule=comfort_rule)
+    def cooling_comfort_rule(model, h):
+        return model.cooling[h] >= 15
+    
+    model.heating_comfort = Constraint(hours, rule=heating_comfort_rule)
+    model.cooling_comfort = Constraint(hours, rule=cooling_comfort_rule)
+    
+    # Додаткове обмеження загальної потужності
+    model.power_limit = Constraint(
+        expr=sum(model.heating[h] + model.cooling[h] for h in hours) <= 200
+    )
     
     solver = SolverFactory('glpk')
     results = solver.solve(model)
