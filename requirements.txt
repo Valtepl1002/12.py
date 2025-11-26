@@ -5,5 +5,3 @@ gekko>=1.0.5
 pyomo>=6.4.0
 numpy>=1.21.0
 matplotlib>=3.5.0
-cyipopt>=1.1.0
-coin-or-cbc>=2.10.0
