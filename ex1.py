@@ -114,47 +114,41 @@ except Exception as e:
 
 # === 5. Pyomo ===
 try:
-    from pyomo.environ import ConcreteModel, Var, Objective, Constraint, SolverFactory
+    from pyomo.environ import ConcreteModel, Var, Objective, Constraint
     print("\n5. Pyomo - Запуск...")
     
+    # Демонстрація створення моделі без розв'язувача
     model = ConcreteModel()
-    hours = range(6)  # Скорочено для прикладу
     
-    model.heating = Var(hours, bounds=(0, 50))
-    model.cooling = Var(hours, bounds=(0, 40))
+    # Змінні
+    model.x = Var(bounds=(0, 100), doc="Потужність опалення")
+    model.y = Var(bounds=(0, 80), doc="Потужність охолодження")
     
-    electricity_price = [0.08 if 7 <= h <= 22 else 0.05 for h in hours]
+    # Цільова функція
+    model.obj = Objective(expr=0.08 * model.x + 0.06 * model.y, doc="Мінімізація витрат")
     
-    model.cost = Objective(
-        expr=sum(electricity_price[h] * (model.heating[h] + model.cooling[h]) 
-                for h in hours)
-    )
+    # Обмеження
+    model.con1 = Constraint(expr=model.x >= 30, doc="Мінімальне опалення")
+    model.con2 = Constraint(expr=model.y >= 20, doc="Мінімальне охолодження")
+    model.con3 = Constraint(expr=model.x + model.y <= 150, doc="Максимальна потужність")
     
-    def heating_comfort_rule(model, h):
-        return model.heating[h] >= 20
+    print("Pyomo - Модель успішно створена")
+    print("Створені змінні:")
+    print(f"  x (опалення): {model.x.doc}, межі: {model.x.bounds}")
+    print(f"  y (охолодження): {model.y.doc}, межі: {model.y.bounds}")
+    print(f"Цільова функція: {model.obj.doc}")
+    print("Обмеження:")
+    for i, con in enumerate([model.con1, model.con2, model.con3], 1):
+        print(f"  {i}. {con.doc}")
     
-    def cooling_comfort_rule(model, h):
-        return model.cooling[h] >= 15
+    # Ручне "розв'язання" для демонстрації
+    model.x.set_value(40.0)
+    model.y.set_value(25.0)
+    print(f"\nПриклад розв'язку (встановлено вручну):")
+    print(f"Опалення: {model.x.value} кВт")
+    print(f"Охолодження: {model.y.value} кВт")
+    print(f"Витрати: {model.obj.expr()} грошових одиниць")
     
-    model.heating_comfort = Constraint(hours, rule=heating_comfort_rule)
-    model.cooling_comfort = Constraint(hours, rule=cooling_comfort_rule)
-    
-    # Додаткове обмеження загальної потужності
-    model.power_limit = Constraint(
-        expr=sum(model.heating[h] + model.cooling[h] for h in hours) <= 200
-    )
-    
-    solver = SolverFactory('glpk')
-    results = solver.solve(model)
-    
-    print("Pyomo - Успішно")
-    total_cost = sum(electricity_price[h] * (model.heating[h].value + model.cooling[h].value) 
-                    for h in hours)
-    print(f"Загальні витрати на енергію: {total_cost:.2f} грошових одиниць")
-    print("Годинне споживання:")
-    for h in hours:
-        print(f"Година {h}: обігрів={model.heating[h].value:.1f}кВт, охолодження={model.cooling[h].value:.1f}кВт")
-        
 except Exception as e:
     print(f"Pyomo - Помилка: {e}")
 
