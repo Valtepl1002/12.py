@@ -406,9 +406,21 @@ class ProductionOptimizer:
             
             # Збереження графіка
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"optimization_results_{timestamp}.png"
-            plt.savefig(filename, dpi=300, bbox_inches='tight')
-            print(f"\nГрафік збережено у файлі: {filename}")
+            base_filename = f"optimization_results_{timestamp}"
+            
+            # Збереження у PNG
+            plt.savefig(f"{base_filename}.png", dpi=300, bbox_inches='tight')
+            
+            # Збереження у PDF
+            plt.savefig(f"{base_filename}.pdf", bbox_inches='tight')
+            
+            # Збереження у SVG
+            plt.savefig(f"{base_filename}.svg", format='svg', bbox_inches='tight')
+            
+            print(f"\nГрафік збережено у файлах:")
+            print(f"  • {base_filename}.png (зображення)")
+            print(f"  • {base_filename}.pdf (документ)")
+            print(f"  • {base_filename}.svg (векторний графік)")
             
             plt.show()
             
@@ -474,7 +486,58 @@ class ProductionOptimizer:
         except Exception as e:
           print(f"Помилка при збереженні результатів: {e}")
             return False
-    
+
+        def save_to_csv(self, filename=None):
+        """
+        Збереження результатів та даних у CSV файл
+        """
+        if not self.optimization_results.get('success'):
+            print("Немає результатів для збереження у CSV")
+            return False
+        
+        try:
+            if filename is None:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"optimization_data_{timestamp}"
+            
+            # 1. Збереження оптимальних параметрів у CSV
+            params_df = pd.DataFrame({
+                'Параметр': ['Швидкість', 'Температура', 'Тиск'],
+                'Значення': self.optimization_results['optimal_values'],
+                'Одиниці': ['од/год', '°C', 'бар']
+            })
+            params_df.to_csv(f"{filename}_parameters.csv", index=False, encoding='utf-8-sig')
+            
+            # 2. Збереження економічних показників у CSV
+            economics_df = pd.DataFrame({
+                'Показник': ['Витрати', 'Дохід', 'Прибуток', 'Ціль', 'Метод', 'Ітерації'],
+                'Значення': [
+                    self.optimization_results.get('production_cost', 0),
+                    self.optimization_results.get('revenue', 0),
+                    self.optimization_results.get('profit', 0),
+                    self.optimization_results.get('objective', 'N/A'),
+                    self.optimization_results.get('method', 'N/A'),
+                    self.optimization_results.get('iterations', 0)
+                ]
+            })
+            economics_df.to_csv(f"{filename}_economics.csv", index=False, encoding='utf-8-sig')
+            
+            # 3. Якщо є оригінальні дані, зберігаємо їх теж
+            if self.data is not None:
+                self.data.to_csv(f"{filename}_raw_data.csv", index=False, encoding='utf-8-sig')
+            
+            print(f"Дані збережено у CSV файлах:")
+            print(f"  • {filename}_parameters.csv")
+            print(f"  • {filename}_economics.csv")
+            if self.data is not None:
+                print(f"  • {filename}_raw_data.csv")
+            
+            return True
+            
+        except Exception as e:
+            print(f"Помилка при збереженні у CSV: {e}")
+            return False
+        
         def display_menu(self):
         """Відображення головного меню"""
         print("\n" + "="*60)
