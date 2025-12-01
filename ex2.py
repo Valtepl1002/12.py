@@ -567,11 +567,19 @@ def main():
                 else:
                     optimizer.save_results()
             
-            elif choice == '7':
-                # Візуалізація
-                optimizer._visualize_results()
+                        elif choice == '7':
+                # Збереження у CSV
+                filename = input("Введіть ім'я файлу (без розширення) [опційно]: ").strip()
+                if filename:
+                    optimizer.save_to_csv(filename)
+                else:
+                    optimizer.save_to_csv()
             
             elif choice == '8':
+                # Візуалізація та збереження графіків
+                optimizer._visualize_results()
+            
+            elif choice == '9':
                 # Вихід
                 print("\nДякую за використання програми!")
                 print("Результати оптимізації збережено у файлах з префіксом 'optimization_'")
