@@ -97,7 +97,7 @@ class ProductionOptimizer:
                 quality_params = user_params.get('quality_params', self.config['quality_params'])
             else:
                 cost_coeff = self.config['cost_coefficients']
-              quality_params = self.config['quality_params']
+              quality_params = self.config.get('quality_params', [0.1, 0.05])
             
             # Розрахунок витрат
             material_cost = cost_coeff[0] * x[0]
