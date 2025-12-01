@@ -298,7 +298,7 @@ class ProductionOptimizer:
                 
                 print(f"Оптимальні значення: {result.x}")
                 print(f"Максимальний прибуток: {-result.fun:.2f}")
-              return linear_results
+                return linear_results
             else:
                 print(f" Лінійна оптимізація не вдалась: {result.message}")
                 return None
@@ -386,7 +386,7 @@ class ProductionOptimizer:
             
             # 4. Просторова візуалізація
             x = np.linspace(10, 100, 20)
-          y = np.linspace(50, 300, 20)
+            y = np.linspace(50, 300, 20)
             X, Y = np.meshgrid(x, y)
             
             # Функція витрат для двох змінних
@@ -475,7 +475,7 @@ class ProductionOptimizer:
           print(f"Помилка при збереженні результатів: {e}")
             return False
     
-    def display_menu(self):
+        def display_menu(self):
         """Відображення головного меню"""
         print("\n" + "="*60)
         print("СИСТЕМА ОПТИМІЗАЦІЇ ВИРОБНИЧИХ ПАРАМЕТРІВ")
@@ -485,9 +485,10 @@ class ProductionOptimizer:
         print("3. Оптимізувати прибуток")
         print("4. Лінійна оптимізація")
         print("5. Аналіз результатів")
-        print("6. Зберегти результати")
-        print("7. Візуалізація")
-        print("8. Вихід")
+        print("6. Зберегти результати (JSON/TXT)")
+        print("7. Зберегти у CSV")
+        print("8. Візуалізація та збереження графіків")
+        print("9. Вихід")
         print("="*60)
 
 def main():
@@ -504,7 +505,7 @@ def main():
     
     # Основний цикл програми
     while True:
-        optimizer.dis
+        optimizer.display_menu()
 
         try:
             choice = input("\nВиберіть опцію (1-8): ").strip()
