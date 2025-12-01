@@ -13,7 +13,7 @@ class ProductionOptimizer:
     Клас для оптимізації виробничих процесів та параметрів
     """
     
-    def init(self):
+    def __init__(self):
         """Ініціалізація оптимізатора"""
         self.data = None
         self.optimization_results = {}
@@ -97,7 +97,7 @@ class ProductionOptimizer:
                 quality_params = user_params.get('quality_params', self.config['quality_params'])
             else:
                 cost_coeff = self.config['cost_coefficients']
-              quality_params = self.config.get('quality_params', [0.1, 0.05])
+                quality_params = self.config.get('quality_params', [0.1, 0.05])
             
             # Розрахунок витрат
             material_cost = cost_coeff[0] * x[0]
@@ -247,7 +247,7 @@ class ProductionOptimizer:
                 })
                 
             else:
-                print(f"\n✗ ОПТИМІЗАЦІЯ НЕ ВДАЛАСЬ: {result.message}")
+                print(f"\n ОПТИМІЗАЦІЯ НЕ ВДАЛАСЬ: {result.message}")
                 self.optimization_results = {
                     'success': False,
                     'message': result.message
@@ -256,7 +256,7 @@ class ProductionOptimizer:
             return self.optimization_results
             
         except Exception as e:
-            print(f"\n✗ ПОМИЛКА ПРИ ОПТИМІЗАЦІЇ: {e}")
+            print(f"\n ПОМИЛКА ПРИ ОПТИМІЗАЦІЇ: {e}")
             return {'success': False, 'error': str(e)}
     
     def linear_optimization(self):
@@ -288,7 +288,7 @@ class ProductionOptimizer:
             result = linprog(c, A_ub=A, b_ub=b, bounds=bounds, method='highs')
             
             if result.success:
-                print("✓ Лінійна оптимізація успішна")
+                print(" Лінійна оптимізація успішна")
                 
                 linear_results = {
                     'optimal_values': result.x.tolist(),
@@ -300,11 +300,11 @@ class ProductionOptimizer:
                 print(f"Максимальний прибуток: {-result.fun:.2f}")
               return linear_results
             else:
-                print(f"✗ Лінійна оптимізація не вдалась: {result.message}")
+                print(f" Лінійна оптимізація не вдалась: {result.message}")
                 return None
                 
         except Exception as e:
-            print(f"✗ Помилка при лінійній оптимізації: {e}")
+            print(f" Помилка при лінійній оптимізації: {e}")
             return None
     
     def analyze_results(self):
