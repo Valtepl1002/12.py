@@ -586,9 +586,25 @@ def main():
             
             elif choice == '2':
                 # Оптимізація витрат
-                method = input("Виберіть метод оптимізації (SLSQP, COBYLA, trust-constr) [SLSQP]: ").strip()
-                if not method:
-                    method = 'SLSQP'
+                print("\nДоступні методи оптимізації:")
+                print("1. SLSQP (за замовчуванням)")
+                print("2. COBYLA")
+                print("3. trust-constr")
+                print("4. Nelder-Mead")
+                print("5. BFGS")
+                
+                method_choice = input("Виберіть номер методу (1-5) [1]: ").strip()
+                
+                method_map = {
+                    '1': 'SLSQP',
+                    '2': 'COBYLA',
+                    '3': 'trust-constr',
+                    '4': 'Nelder-Mead',
+                    '5': 'BFGS'
+                }
+                
+                method = method_map.get(method_choice, 'SLSQP')
+                print(f"Вибрано метод: {method}")
 
                 # Користувацькі параметри
                 use_custom = input("Використати користувацькі параметри? (y/n) [n]: ").strip().lower()
@@ -609,9 +625,25 @@ def main():
             
             elif choice == '3':
                 # Оптимізація прибутку
-                method = input("Виберіть метод оптимізації (SLSQP, COBYLA, trust-constr) [SLSQP]: ").strip()
-                if not method:
-                    method = 'SLSQP'
+                print("\nДоступні методи оптимізації:")
+                print("1. SLSQP (за замовчуванням)")
+                print("2. COBYLA")
+                print("3. trust-constr")
+                print("4. Nelder-Mead")
+                print("5. BFGS")
+                
+                method_choice = input("Виберіть номер методу (1-5) [1]: ").strip()
+                
+                method_map = {
+                    '1': 'SLSQP',
+                    '2': 'COBYLA',
+                    '3': 'trust-constr',
+                    '4': 'Nelder-Mead',
+                    '5': 'BFGS'
+                }
+                
+                method = method_map.get(method_choice, 'SLSQP')
+                print(f"Вибрано метод: {method}")
                 
                 results = optimizer.optimize_production(objective='profit', method=method)
             
