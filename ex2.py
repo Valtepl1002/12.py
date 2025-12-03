@@ -484,7 +484,7 @@ class ProductionOptimizer:
             return True
             
         except Exception as e:
-          print(f"Помилка при збереженні результатів: {e}")
+            print(f"Помилка при збереженні результатів: {e}")
             return False
 
     def save_to_csv(self, filename=None):
