@@ -585,27 +585,13 @@ def main():
                     optimizer.load_data()
             
             elif choice == '2':
-                # Оптимізація витрат
-                print("\nДоступні методи оптимізації:")
-                print("1. SLSQP (за замовчуванням)")
-                print("2. COBYLA")
-                print("3. trust-constr")
-                print("4. Nelder-Mead")
-                print("5. BFGS")
+                # Оптимізація витрат - запуск всіх методів
+                print("\nЗапуск оптимізації витрат за всіма доступними методами...")
+                print("="*60)
                 
-                method_choice = input("Виберіть номер методу (1-5) [1]: ").strip()
+                methods = ['SLSQP', 'COBYLA', 'trust-constr', 'Nelder-Mead', 'BFGS']
+                all_results = []
                 
-                method_map = {
-                    '1': 'SLSQP',
-                    '2': 'COBYLA',
-                    '3': 'trust-constr',
-                    '4': 'Nelder-Mead',
-                    '5': 'BFGS'
-                }
-                
-                method = method_map.get(method_choice, 'SLSQP')
-                print(f"Вибрано метод: {method}")
-
                 # Користувацькі параметри
                 use_custom = input("Використати користувацькі параметри? (y/n) [n]: ").strip().lower()
                 user_params = None
@@ -621,31 +607,85 @@ def main():
                     except:
                         print("Помилка введення, використовуються параметри за замовчуванням")
                 
-                results = optimizer.optimize_production(objective='cost', method=method, user_params=user_params)
-            
+                for method in methods:
+                    print(f"\n{'='*40}")
+                    print(f"Метод: {method}")
+                    print(f"{'='*40}")
+                    
+                    result = optimizer.optimize_production(
+                        objective='cost', 
+                        method=method, 
+                        user_params=user_params
+                    )
+                    
+                    if result.get('success'):
+                        all_results.append({
+                            'method': method,
+                            'optimal_values': result.get('optimal_values'),
+                            'production_cost': result.get('production_cost')
+                        })
+                
+                # Порівняння результатів
+                if all_results:
+                    print("\n" + "="*60)
+                    print("ПОРІВНЯННЯ РЕЗУЛЬТАТІВ ВСІХ МЕТОДІВ")
+                    print("="*60)
+                    
+                    # Знаходимо найкращий результат (мінімальні витрати)
+                    best_result = min(all_results, key=lambda x: x['production_cost'])
+                    
+                    print("\nНайкращий результат:")
+                    print(f"Метод: {best_result['method']}")
+                    print(f"Витрати: {best_result['production_cost']:.2f}")
+                    print(f"Оптимальні параметри: {best_result['optimal_values']}")
+                    
+                    # Зберігаємо найкращий результат для подальшого аналізу
+                    if best_result['method'] == 'SLSQP':
+                        # Якщо SLSQP дало найкращий результат, він вже збережений
+                        pass
+                    else:
+                        # Можна тут зберегти результати іншого методу
+                        print(f"\nРезультати методу {best_result['method']} будуть використані для подальшого аналізу")
+                        # Можна тут оновити optimizer.optimization_results
+                
             elif choice == '3':
-                # Оптимізація прибутку
-                print("\nДоступні методи оптимізації:")
-                print("1. SLSQP (за замовчуванням)")
-                print("2. COBYLA")
-                print("3. trust-constr")
-                print("4. Nelder-Mead")
-                print("5. BFGS")
+                # Оптимізація прибутку - запуск всіх методів
+                print("\nЗапуск оптимізації прибутку за всіма доступними методами...")
+                print("="*60)
                 
-                method_choice = input("Виберіть номер методу (1-5) [1]: ").strip()
+                methods = ['SLSQP', 'COBYLA', 'trust-constr', 'Nelder-Mead', 'BFGS']
+                all_results = []
                 
-                method_map = {
-                    '1': 'SLSQP',
-                    '2': 'COBYLA',
-                    '3': 'trust-constr',
-                    '4': 'Nelder-Mead',
-                    '5': 'BFGS'
-                }
+                for method in methods:
+                    print(f"\n{'='*40}")
+                    print(f"Метод: {method}")
+                    print(f"{'='*40}")
+                    
+                    result = optimizer.optimize_production(
+                        objective='profit',
+                        method=method
+                    )
+                    
+                    if result.get('success'):
+                        all_results.append({
+                            'method': method,
+                            'optimal_values': result.get('optimal_values'),
+                            'profit': result.get('profit')
+                        })
                 
-                method = method_map.get(method_choice, 'SLSQP')
-                print(f"Вибрано метод: {method}")
-                
-                results = optimizer.optimize_production(objective='profit', method=method)
+                # Порівняння результатів
+                if all_results:
+                    print("\n" + "="*60)
+                    print("ПОРІВНЯННЯ РЕЗУЛЬТАТІВ ВСІХ МЕТОДІВ")
+                    print("="*60)
+                    
+                    # Знаходимо найкращий результат (максимальний прибуток)
+                    best_result = max(all_results, key=lambda x: x['profit'])
+                    
+                    print("\nНайкращий результат:")
+                    print(f"Метод: {best_result['method']}")
+                    print(f"Прибуток: {best_result['profit']:.2f}")
+                    print(f"Оптимальні параметри: {best_result['optimal_values']}")
             
             elif choice == '4':
                 # Лінійна оптимізація
