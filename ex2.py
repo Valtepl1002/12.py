@@ -199,7 +199,7 @@ class ProductionOptimizer:
             if objective == 'cost':
                 objective_function = lambda x: self.production_cost_function(x, user_params)
                 print("Ціль: мінімізація витрат")
-              elif objective == 'profit':
+            elif objective == 'profit':
                 objective_function = lambda x: self.profit_function(x, user_params)
                 print("Ціль: максимізація прибутку")
             else:
@@ -487,7 +487,7 @@ class ProductionOptimizer:
           print(f"Помилка при збереженні результатів: {e}")
             return False
 
-        def save_to_csv(self, filename=None):
+    def save_to_csv(self, filename=None):
         """
         Збереження результатів та даних у CSV файл
         """
@@ -538,7 +538,7 @@ class ProductionOptimizer:
             print(f"Помилка при збереженні у CSV: {e}")
             return False
         
-        def display_menu(self):
+    def display_menu(self):
         """Відображення головного меню"""
         print("\n" + "="*60)
         print("СИСТЕМА ОПТИМІЗАЦІЇ ВИРОБНИЧИХ ПАРАМЕТРІВ")
@@ -590,7 +590,7 @@ def main():
                 if not method:
                     method = 'SLSQP'
 
-              # Користувацькі параметри
+                # Користувацькі параметри
                 use_custom = input("Використати користувацькі параметри? (y/n) [n]: ").strip().lower()
                 user_params = None
                 
@@ -631,7 +631,7 @@ def main():
                 else:
                     optimizer.save_results()
             
-                        elif choice == '7':
+            elif choice == '7':
                 # Збереження у CSV
                 filename = input("Введіть ім'я файлу (без розширення) [опційно]: ").strip()
                 if filename:
