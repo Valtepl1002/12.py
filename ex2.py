@@ -577,12 +577,35 @@ def main():
                 # Завантаження даних
                 filename = input("Введіть ім'я файлу (або Enter для тестових даних): ").strip()
                 if filename:
-                    success = optimizer.load_data(filename)
-                    if not success:
-                        print("Використовуються тестові дані")
-                        optimizer.load_data()
+                    # Перевіряємо, чи існує файл
+                    if os.path.exists(filename):
+                        # Файл існує - завантажуємо
+                        success = optimizer.load_data(filename)
+                    else:
+                        # Файл не існує - створюємо тестові дані і зберігаємо у файл
+                        print(f"Файл '{filename}' не знайдено. Створення тестових даних і збереження у файл...")
+                        
+                        # Створюємо тестові дані
+                        optimizer._generate_test_data()
+                        
+                        # Додаємо розширення .txt, якщо його немає
+                        if not filename.endswith('.txt'):
+                            filename = filename + '.txt'
+                        
+                        try:
+                            # Зберігаємо дані у TXT файл (через сепаратор табуляції)
+                            optimizer.data.to_csv(filename, sep='\t', index=False)
+                            print(f"Створено файл '{filename}' з {len(optimizer.data)} записами")
+                            
+                            # Завантажуємо дані з нового файлу
+                            success = optimizer.load_data(filename)
+                        except Exception as e:
+                            print(f"Помилка при створенні файлу: {e}")
+                            print("Використовуються тестові дані в пам'яті")
+                            success = optimizer.load_data()
                 else:
-                    optimizer.load_data()
+                    # Файл не вказаний - створюємо тестові дані в пам'яті
+                    success = optimizer.load_data()
             
             elif choice == '2':
                 # Оптимізація витрат - запуск всіх методів
