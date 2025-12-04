@@ -575,7 +575,7 @@ def main():
             
             if choice == '1':
                 # Завантаження даних
-                filename = input("Введіть ім'я файлу (або Enter для тестових даних): ").strip()
+                filename = input("Введіть ім'я файлу: ").strip()
                 if filename:
                     # Перевіряємо, чи існує файл
                     if os.path.exists(filename):
@@ -616,10 +616,10 @@ def main():
                 all_results = []
                 
                 # Користувацькі параметри
-                use_custom = input("Використати користувацькі параметри? (y/n) [n]: ").strip().lower()
+                use_custom = input("Використати користувацькі параметри? (так/ні): ").strip().lower()
                 user_params = None
                 
-                if use_custom == 'y':
+                if use_custom == 'т':
                     try:
                         cost_coeff = list(map(float, input("Коефіцієнти витрат (3 числа через пробіл): ").split()))
                         quality_params = list(map(float, input("Параметри якості (2 числа через пробіл): ").split()))
