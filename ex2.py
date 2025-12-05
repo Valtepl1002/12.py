@@ -655,7 +655,7 @@ def main():
                 use_custom = input("Використати користувацькі параметри? (так/ні): ").strip().lower()
                 user_params = None
                 
-                if use_custom == 'т':
+                if use_custom in ['так', 'т']:
                     try:
                         cost_coeff = list(map(float, input("Коефіцієнти витрат (3 числа через пробіл): ").split()))
                         quality_params = list(map(float, input("Параметри якості (2 числа через пробіл): ").split()))
@@ -663,26 +663,35 @@ def main():
                             'cost_coefficients': cost_coeff,
                             'quality_params': quality_params
                         }
+                        print("Користувацькі параметри застосовані")
                     except:
                         print("Помилка введення, використовуються параметри за замовчуванням")
+                else:
+                    print("Використовуються параметри за замовчуванням")
                 
                 for method in methods:
                     print(f"\n{'='*40}")
                     print(f"Метод: {method}")
                     print(f"{'='*40}")
                     
-                    result = optimizer.optimize_production(
-                        objective='cost', 
-                        method=method, 
-                        user_params=user_params
-                    )
-                    
-                    if result.get('success'):
-                        all_results.append({
-                            'method': method,
-                            'optimal_values': result.get('optimal_values'),
-                            'production_cost': result.get('production_cost')
-                        })
+                    try:
+                        result = optimizer.optimize_production(
+                            objective='cost', 
+                            method=method, 
+                            user_params=user_params
+                        )
+                        
+                        if result.get('success'):
+                            all_results.append({
+                                'method': method,
+                                'optimal_values': result.get('optimal_values'),
+                                'production_cost': result.get('production_cost')
+                            })
+                            print(f"Метод {method} успішний")
+                        else:
+                            print(f"Метод {method} не вдалося виконати")
+                    except Exception as e:
+                        print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
                 
                 # Порівняння результатів
                 if all_results:
@@ -698,14 +707,12 @@ def main():
                     print(f"Витрати: {best_result['production_cost']:.2f}")
                     print(f"Оптимальні параметри: {best_result['optimal_values']}")
                     
-                    # Зберігаємо найкращий результат для подальшого аналізу
-                    if best_result['method'] == 'SLSQP':
-                        # Якщо SLSQP дало найкращий результат, він вже збережений
-                        pass
-                    else:
-                        # Можна тут зберегти результати іншого методу
-                        print(f"\nРезультати методу {best_result['method']} будуть використані для подальшого аналізу")
-                        # Можна тут оновити optimizer.optimization_results
+                    # Оновлюємо результат для подальшого аналізу
+                    print(f"\nРезультати методу {best_result['method']} будуть використані для подальшого аналізу")
+                    
+                else:
+                    print("\nЖоден з методів не дав успішних результатів")
+                    print("Спробуйте інші методи або перевірте параметри")
                 
             elif choice == '3':
                 # Оптимізація прибутку - запуск всіх методів
