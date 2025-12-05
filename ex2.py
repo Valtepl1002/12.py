@@ -268,84 +268,88 @@ class ProductionOptimizer:
             return {'success': False, 'error': str(e)}
     
     def linear_optimization(self):
-    """
-    Лінійна оптимізація за допомогою linprog
-    """
-    print("\n" + "="*60)
-    print("ЛІНІЙНА ОПТИМІЗАЦІЯ (ПЛАНОВЕ ЗАВДАННЯ)")
-    print("="*60)
-    
-    try:
-        c = [-150, -80, -40]  # доход з одиниці продукції
+        """
+        Лінійна оптимізація за допомогою linprog
+        """
+        print("\n" + "="*60)
+        print("ЛІНІЙНА ОПТИМІЗАЦІЯ (ПЛАНОВЕ ЗАВДАННЯ)")
+        print("="*60)
         
-        A_ub = [
-            [-1, 0, 0],   # -x1 <= -10 
-            [1, 0, 0],    # x1 <= 100
-            [0, -1, 0],   # -x2 <= -50
-            [0, 1, 0],    # x2 <= 300
-            [100, 50, 30] # бюджетне обмеження
-        ]
-        b_ub = [-10, 100, -50, 300, 50000]
-        
-        # Межі змінних 
-        # x3 має бути в межах [1, 10]
-        bounds = [
-            (10, 100),    # x1
-            (50, 300),    # x2  
-            (1, 10)       # x3
-        ]
-        
-        # Виконання лінійної оптимізації
-        result = linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=bounds, method='highs')
-        
-        if result.success:
-            print("✓ Лінійна оптимізація успішна")
+        try:
+            c = [-150, -80, -40]  # доход з одиниці продукції
             
-            optimal_values = result.x
-            revenue = -result.fun  # мінус, бо ми мінімізували -дохід
-            costs = (100 * optimal_values[0] + 50 * optimal_values[1] + 
-                    30 * optimal_values[2])
-            profit = revenue - costs
+            A_ub = [
+                [-1, 0, 0],   # -x1 <= -10 
+                [1, 0, 0],    # x1 <= 100
+                [0, -1, 0],   # -x2 <= -50
+                [0, 1, 0],    # x2 <= 300
+                [100, 50, 30] # бюджетне обмеження
+            ]
+            b_ub = [-10, 100, -50, 300, 50000]
             
-            linear_results = {
-                'optimal_values': optimal_values.tolist(),
-                'revenue': revenue,
-                'costs': costs,
-                'profit': profit,
-                'status': result.message
-            }
+            # Межі змінних 
+            # x3 має бути в межах [1, 10]
+            bounds = [
+                (10, 100),    # x1
+                (50, 300),    # x2  
+                (1, 10)       # x3
+            ]
             
-            print(f"\nОПТИМАЛЬНІ ЗНАЧЕННЯ:")
-            print(f"  Швидкість: {optimal_values[0]:.2f} од/год")
-            print(f"  Температура: {optimal_values[1]:.2f} °C")
-            print(f"  Тиск: {optimal_values[2]:.2f} бар")
-            print(f"\nЕКОНОМІЧНІ ПОКАЗНИКИ:")
-            print(f"  Дохід: {revenue:.2f}")
-            print(f"  Витрати: {costs:.2f}")
-            print(f"  Прибуток: {profit:.2f}")
+            # Виконання лінійної оптимізації
+            result = linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=bounds, method='highs')
             
-            return linear_results
-        else:
-            print(f"✗ Лінійна оптимізація не вдалась: {result.message}")
-            
-            # Діагностика проблеми
-            if "infeasible" in result.message.lower():
-                print("\nДІАГНОСТИКА ПРОБЛЕМИ:")
-                print("Задача не має допустимих рішень. Можливі причини:")
-                print("1. Протиріччя в обмеженнях")
-                print("2. Бюджет занадто малий для мінімальних значень")
-                print("3. Обмеження несумісні")
+            if result.success:
+                print("✓ Лінійна оптимізація успішна")
                 
-                # Перевірка мінімальних витрат
-                min_costs = 100*10 + 50*50 + 30*1  # мінімальні значення
-                print(f"\nМінімальні можливі витрати: {min_costs:.2f}")
-                print(f"Бюджетне обмеження: 50000.00")
+                optimal_values = result.x
+                revenue = -result.fun  # мінус, бо ми мінімізували -дохід
+                costs = (100 * optimal_values[0] + 50 * optimal_values[1] + 
+                        30 * optimal_values[2])
+                profit = revenue - costs
                 
-                if min_costs > 50000:
-                    print(f"Мінімальні витрати ({min_costs:.2f}) перевищують бюджет (50000)!")
-                else:
-                    print("Бюджет достатній для мінімальних значень.")
-            
+                linear_results = {
+                    'optimal_values': optimal_values.tolist(),
+                    'revenue': revenue,
+                    'costs': costs,
+                    'profit': profit,
+                    'status': result.message
+                }
+                
+                print(f"\nОПТИМАЛЬНІ ЗНАЧЕННЯ:")
+                print(f"  Швидкість: {optimal_values[0]:.2f} од/год")
+                print(f"  Температура: {optimal_values[1]:.2f} °C")
+                print(f"  Тиск: {optimal_values[2]:.2f} бар")
+                print(f"\nЕКОНОМІЧНІ ПОКАЗНИКИ:")
+                print(f"  Дохід: {revenue:.2f}")
+                print(f"  Витрати: {costs:.2f}")
+                print(f"  Прибуток: {profit:.2f}")
+                
+                return linear_results
+            else:
+                print(f"✗ Лінійна оптимізація не вдалась: {result.message}")
+                
+                # Діагностика проблеми
+                if "infeasible" in result.message.lower():
+                    print("\nДІАГНОСТИКА ПРОБЛЕМИ:")
+                    print("Задача не має допустимих рішень. Можливі причини:")
+                    print("1. Протиріччя в обмеженнях")
+                    print("2. Бюджет занадто малий для мінімальних значень")
+                    print("3. Обмеження несумісні")
+                    
+                    # Перевірка мінімальних витрат
+                    min_costs = 100*10 + 50*50 + 30*1  # мінімальні значення
+                    print(f"\nМінімальні можливі витрати: {min_costs:.2f}")
+                    print(f"Бюджетне обмеження: 50000.00")
+                    
+                    if min_costs > 50000:
+                        print(f"Мінімальні витрати ({min_costs:.2f}) перевищують бюджет (50000)!")
+                    else:
+                        print("Бюджет достатній для мінімальних значень.")
+                
+                return None
+                
+        except Exception as e:
+            print(f"Помилка при лінійній оптимізації: {e}")
             return None
             
     except Exception as e:
