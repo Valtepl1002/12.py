@@ -272,7 +272,7 @@ class ProductionOptimizer:
         Лінійна оптимізація за допомогою linprog
         """
         print("\n" + "="*60)
-        print("ЛІНІЙНА ОПТИМІЗАЦІЯ (ПЛАНОВЕ ЗАВДАННЯ)")
+        print("ЛІНІЙНА ОПТИМІЗАЦІЯ")
         print("="*60)
         
         try:
@@ -354,13 +354,21 @@ class ProductionOptimizer:
     
     def analyze_results(self):
         """Аналіз та візуалізація результатів"""
-        if not self.optimization_results.get('success'):
-            print("Немає результатів для аналізу")
-            return
-        
         print("\n" + "="*60)
         print("АНАЛІЗ РЕЗУЛЬТАТІВ ОПТИМІЗАЦІЇ")
         print("="*60)
+        
+        if not self.optimization_results:
+            print("РЕЗУЛЬТАТИ ОПТИМІЗАЦІЇ ВІДСУТНІ!")
+            print("\nЩоб отримати результати, спочатку виконайте:")
+            print("1. Завантажте дані (опція 1)")
+            print("2. Виконайте оптимізацію (опція 2, 3 або 4)")
+            return
+        
+        if not self.optimization_results.get('success'):
+            print("ОСТАННЯ ОПТИМІЗАЦІЯ НЕ БУЛА УСПІШНОЮ")
+            print(f"Причина: {self.optimization_results.get('message', 'Невідома причина')}")
+            return
         
         # Вивід результатів
         params = ['Швидкість', 'Температура', 'Тиск']
@@ -371,16 +379,26 @@ class ProductionOptimizer:
         for i, (param, unit, value) in enumerate(zip(params, units, optimal)):
             print(f"  {param}: {value:.2f} {unit}")
         
-        print(f"\nВИТРАТИ НА ВИРОБНИЦТВО: {self.optimization_results['production_cost']:.2f}")
+        print(f"\nВИТРАТИ НА ВИРОБНИЦТВО: {self.optimization_results['production_cost']:.2f} грн")
         
         if self.optimization_results['objective'] == 'profit':
-            print(f"ДОХІД: {self.optimization_results['revenue']:.2f}")
-            print(f"ПРИБУТОК: {self.optimization_results['profit']:.2f}")
+            print(f"ДОХІД: {self.optimization_results['revenue']:.2f} грн")
+            print(f"ПРИБУТОК: {self.optimization_results['profit']:.2f} грн")
         
         print(f"\nІТЕРАЦІЙ: {self.optimization_results['iterations']}")
+        print(f"МЕТОД: {self.optimization_results['method']}")
+        print(f"ЦІЛЬ: {self.optimization_results['objective']}")
         
-        # Візуалізація
-        self._visualize_results()
+        # Пропозиція зберегти результати
+        print("\n" + "-"*60)
+        print("Щоб зберегти результати, виберіть опцію 6 (JSON/TXT) або 7 (CSV)")
+        print("Щоб побачити графіки, виберіть опцію 8")
+        print("-"*60)
+        
+        # Запит на візуалізацію
+        visualize = input("\nПоказати графіки результатів? (так/ні): ").strip().lower()
+        if visualize in ['так', 'т']:
+            self._visualize_results()
     
     def _visualize_results(self):
         """Візуалізація результатів оптимізації"""
