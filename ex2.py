@@ -674,9 +674,9 @@ def main():
                     print(f"Метод: {method}")
                     print(f"{'='*40}")
 
-                    try:
                         if method == 'BFGS':
-                            # Для BFGS використовуємо тільки bounds, без constraints
+                            try:
+                            # Визначимо цільову функцію
                             if user_params:
                                 def objective_func(x):
                                     return optimizer.production_cost_function(x, user_params)
@@ -707,25 +707,31 @@ def main():
                                 print(f"Метод {method} успішний")
                             else:
                                 print(f"Метод {method} не вдалося виконати: {result.message}")
-                    
+
+                        except Exception as e:
+                            print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
+
+                    # Для всіх інших методів
                     else:
-                        result = optimizer.optimize_production(
-                            objective='cost', 
-                            method=method, 
-                            user_params=user_params
-                        )
-                        
-                        if result.get('success'):
-                            all_results.append({
-                                'method': method,
-                                'optimal_values': result.get('optimal_values'),
-                                'production_cost': result.get('production_cost')
-                            })
-                            print(f"Метод {method} успішний")
-                        else:
-                            print(f"Метод {method} не вдалося виконати")
-                    except Exception as e:
-                        print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
+                        try:
+                            result = optimizer.optimize_production(
+                                objective='cost', 
+                                method=method, 
+                                user_params=user_params
+                            )
+                            
+                            if result.get('success'):
+                                all_results.append({
+                                    'method': method,
+                                    'optimal_values': result.get('optimal_values'),
+                                    'production_cost': result.get('production_cost')
+                                })
+                                print(f"Метод {method} успішний")
+                            else:
+                                print(f"Метод {method} не вдалося виконати")
+                                
+                        except Exception as e:
+                            print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
                 
                 # Порівняння результатів
                 if all_results:
