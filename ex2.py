@@ -388,17 +388,6 @@ class ProductionOptimizer:
         print(f"\nІТЕРАЦІЙ: {self.optimization_results['iterations']}")
         print(f"МЕТОД: {self.optimization_results['method']}")
         print(f"ЦІЛЬ: {self.optimization_results['objective']}")
-        
-        # Пропозиція зберегти результати
-        print("\n" + "-"*60)
-        print("Щоб зберегти результати, виберіть опцію 6 (JSON/TXT) або 7 (CSV)")
-        print("Щоб побачити графіки, виберіть опцію 8")
-        print("-"*60)
-        
-        # Запит на візуалізацію
-        visualize = input("\nПоказати графіки результатів? (так/ні): ").strip().lower()
-        if visualize in ['так', 'т']:
-            self._visualize_results()
     
     def _visualize_results(self):
         """Візуалізація результатів оптимізації"""
