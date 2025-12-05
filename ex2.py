@@ -790,22 +790,29 @@ def main():
                     except Exception as e:
                         print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
                 
-                # Порівняння результатів
-                if all_results:
-                    print("\n" + "="*60)
-                    print("ПОРІВНЯННЯ РЕЗУЛЬТАТІВ ВСІХ МЕТОДІВ")
-                    print("="*60)
-                    
-                    # Знаходимо найкращий результат 
-                    best_result = min(all_results, key=lambda x: x['production_cost'])
-                    
-                    print("\nНайкращий результат:")
-                    print(f"Метод: {best_result['method']}")
-                    print(f"Витрати: {best_result['production_cost']:.2f}")
-                    print(f"Оптимальні параметри: {best_result['optimal_values']}")
-                    
-                    # Оновлюємо результат для подальшого аналізу
-                    print(f"\nРезультати методу {best_result['method']} будуть використані для подальшого аналізу")
+               # Порівняння результатів
+               if all_results:
+                   print("\n" + "="*60)
+                   print("ПОРІВНЯННЯ РЕЗУЛЬТАТІВ ВСІХ МЕТОДІВ")
+                   print("="*60)
+    
+                   # Знаходимо найкращий результат 
+                   best_result = min(all_results, key=lambda x: x['production_cost'])
+    
+                   print("\nНАЙКРАЩИЙ РЕЗУЛЬТАТ:")
+                   print(f"Метод: {best_result['method']}")
+                   print(f"Витрати: {best_result['production_cost']:.2f}")
+                   print(f"Оптимальні параметри: {best_result['optimal_values']}")
+    
+                   # Зберігаємо результати для можливості аналізу
+                   optimizer.optimization_results = {
+                       'success': True,
+                       'objective': 'cost',
+                       'method': best_result['method'],
+                       'optimal_values': best_result['optimal_values'],
+                       'production_cost': best_result['production_cost'],
+                       'message': f"Найкращий результат серед {len(methods)} методів"
+                   }
                     
                 else:
                     print("\nЖоден з методів не дав успішних результатів")
