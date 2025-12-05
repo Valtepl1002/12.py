@@ -792,32 +792,35 @@ def main():
                 
                # Порівняння результатів
                 if all_results:
-                    print(f"\nЗнайдено {len(all_results)} успішних результатів з {len(methods)} методів")
-                    
                     print("\n" + "="*60)
                     print("ПОРІВНЯННЯ РЕЗУЛЬТАТІВ ВСІХ МЕТОДІВ")
                     print("="*60)
     
                     # Знаходимо найкращий результат 
                     best_result = min(all_results, key=lambda x: x['production_cost'])
+                    
+                    # Безпечне отримання значень
+                    method_name = str(best_result.get('method', 'Невідомий')).strip()
+                    cost_value = float(best_result.get('production_cost', 0))
+                    optimal_values = best_result.get('optimal_values', [0, 0, 0])
     
                     print("\nНАЙКРАЩИЙ РЕЗУЛЬТАТ:")
-                    print(f"Метод: {best_result['method']}")
-                    print(f"Витрати: {best_result['production_cost']:.2f}")
-                    print(f"Оптимальні параметри: {best_result['optimal_values']}")
+                    print(f"Метод: {method_name}")
+                    print(f"Витрати: {cost_value:.2f}")
+                    print(f"Оптимальні параметри: {optimal_values}")
     
                     # Зберігаємо результати для можливості аналізу
                     optimizer.optimization_results = {
                         'success': True,
                         'objective': 'cost',
-                        'method': best_result['method'],
-                        'optimal_values': best_result['optimal_values'],
-                        'production_cost': best_result['production_cost'],
+                        'method': method_name,
+                        'optimal_values': optimal_values,
+                        'production_cost': cost_value,
                         'message': f"Найкращий результат серед {len(all_results)} методів"
                     }
                 
                 else:
-                    print(f"\nЖоден з {len(methods)} методів не дав успішних результатів")
+                    print("\nЖоден з методів не дав успішних результатів")
                     print("Спробуйте інші методи або перевірте параметри")
                 
             elif choice == '3':
