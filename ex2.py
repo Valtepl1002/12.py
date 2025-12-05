@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize, linprog
 import json
@@ -390,59 +392,71 @@ class ProductionOptimizer:
         print(f"ЦІЛЬ: {self.optimization_results['objective']}")
     
     def _visualize_results(self):
-        """Візуалізація результатів оптимізації"""
-        if not self.optimization_results.get('success'):
-            return
+    """Візуалізація результатів оптимізації та збереження графіків"""
+    if not self.optimization_results.get('success'):
+        print("Немає успішних результатів оптимізації для візуалізації")
+        return
+    
+    try:
+        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+        fig.suptitle('Результати оптимізації виробничих параметрів', fontsize=16)
         
+        # 1. Оптимальні параметри
+        params = ['Швидкість', 'Температура', 'Тиск']
+        optimal = self.optimization_results['optimal_values']
+        
+        axes[0, 0].bar(params, optimal, color=['blue', 'red', 'green'])
+        axes[0, 0].set_title('Оптимальні значення параметрів')
+        axes[0, 0].set_ylabel('Значення')
+        axes[0, 0].grid(True, alpha=0.3)
+        
+        # 2. Вплив параметрів на витрати (якщо є дані)
+        if self.data is not None and len(self.data) > 0:
+            sample_size = min(50, len(self.data))
+            sample = self.data.sample(sample_size, random_state=42)
+            
+            axes[0, 1].scatter(sample['production_speed'], sample['material_cost'], 
+                              alpha=0.6, label='Матеріали')
+            axes[0, 1].scatter(sample['temperature'], sample['energy_cost'], 
+                              alpha=0.6, label='Енергія', color='red')
+            axes[0, 1].set_title('Вплив параметрів на витрати')
+            axes[0, 1].set_xlabel('Параметри')
+            axes[0, 1].set_ylabel('Витрати')
+            axes[0, 1].legend()
+            axes[0, 1].grid(True, alpha=0.3)
+        else:
+            axes[0, 1].text(0.5, 0.5, 'Немає даних для візуалізації\nСпочатку завантажте дані', 
+                           ha='center', va='center', transform=axes[0, 1].transAxes)
+            axes[0, 1].set_title('Вплив параметрів на витрати')
+        
+        # 3. Порівняння економічних показників
+        if self.optimization_results['objective'] == 'profit':
+            indicators = ['Витрати', 'Дохід', 'Прибуток']
+            values = [
+                self.optimization_results['production_cost'],
+                self.optimization_results['revenue'],
+                self.optimization_results['profit']
+            ]
+            
+            axes[1, 0].bar(indicators, values, color=['red', 'green', 'blue'])
+            axes[1, 0].set_title('Економічні показники')
+            axes[1, 0].set_ylabel('Грошові одиниці')
+            axes[1, 0].grid(True, alpha=0.3)
+        else:
+            # Для мінімізації витрат показуємо тільки витрати
+            axes[1, 0].bar(['Витрати'], [self.optimization_results['production_cost']], color='red')
+            axes[1, 0].set_title('Витрати на виробництво')
+            axes[1, 0].set_ylabel('Грошові одиниці')
+            axes[1, 0].grid(True, alpha=0.3)
+        
+        # 4. Просторова візуалізація 
         try:
-            fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-            fig.suptitle('Результати оптимізації виробничих параметрів', fontsize=16)
-            
-            # 1. Оптимальні параметри
-            params = ['Швидкість', 'Температура', 'Тиск']
-            optimal = self.optimization_results['optimal_values']
-            
-            axes[0, 0].bar(params, optimal, color=['blue', 'red', 'green'])
-            axes[0, 0].set_title('Оптимальні значення параметрів')
-            axes[0, 0].set_ylabel('Значення')
-            axes[0, 0].grid(True, alpha=0.3)
-            
-            # 2. Вплив параметрів на витрати
-            if self.data is not None:
-                sample_size = min(50, len(self.data))
-                sample = self.data.sample(sample_size)
-                
-                axes[0, 1].scatter(sample['production_speed'], sample['material_cost'], 
-                                  alpha=0.6, label='Матеріали')
-                axes[0, 1].scatter(sample['temperature'], sample['energy_cost'], 
-                                  alpha=0.6, label='Енергія', color='red')
-                axes[0, 1].set_title('Вплив параметрів на витрати')
-                axes[0, 1].set_xlabel('Параметри')
-                axes[0, 1].set_ylabel('Витрати')
-                axes[0, 1].legend()
-                axes[0, 1].grid(True, alpha=0.3)
-            
-            # 3. Порівняння економічних показників
-            if self.optimization_results['objective'] == 'profit':
-                indicators = ['Витрати', 'Дохід', 'Прибуток']
-                values = [
-                    self.optimization_results['production_cost'],
-                    self.optimization_results['revenue'],
-                    self.optimization_results['profit']
-                ]
-                
-                axes[1, 0].bar(indicators, values, color=['red', 'green', 'blue'])
-                axes[1, 0].set_title('Економічні показники')
-                axes[1, 0].set_ylabel('Грошові одиниці')
-                axes[1, 0].grid(True, alpha=0.3)
-            
-            # 4. Просторова візуалізація
             x = np.linspace(10, 100, 20)
             y = np.linspace(50, 300, 20)
             X, Y = np.meshgrid(x, y)
             
-            # Функція витрат для двох змінних
-            Z = np.array([[self.production_cost_function([xi, yi, 5]) 
+            # Функція витрат для двох змінних 
+            Z = np.array([[self.production_cost_function([xi, yi, optimal[2]]) 
                           for xi in x] for yi in y])
             
             contour = axes[1, 1].contourf(X, Y, Z, levels=20, cmap='viridis')
@@ -453,31 +467,48 @@ class ProductionOptimizer:
             axes[1, 1].set_ylabel('Температура (°C)')
             axes[1, 1].legend()
             plt.colorbar(contour, ax=axes[1, 1])
-            
-            plt.tight_layout()
-            
-            # Збереження графіка
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            base_filename = f"optimization_results_{timestamp}"
-            
-            # Збереження у PNG
-            plt.savefig(f"{base_filename}.png", dpi=300, bbox_inches='tight')
-            
-            # Збереження у PDF
-            plt.savefig(f"{base_filename}.pdf", bbox_inches='tight')
-            
-            # Збереження у SVG
-            plt.savefig(f"{base_filename}.svg", format='svg', bbox_inches='tight')
-            
-            print(f"\nГрафік збережено у файлах:")
-            print(f"  • {base_filename}.png (зображення)")
-            print(f"  • {base_filename}.pdf (документ)")
-            print(f"  • {base_filename}.svg (векторний графік)")
-            
-            plt.show()
-            
         except Exception as e:
-            print(f"Помилка при візуалізації: {e}")
+            print(f"Помилка при побудові поверхні витрат: {e}")
+            axes[1, 1].text(0.5, 0.5, 'Не вдалося побудувати поверхню витрат',
+                           ha='center', va='center', transform=axes[1, 1].transAxes)
+        
+        plt.tight_layout()
+        
+        # Збереження графіка у різних форматах
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"optimization_results_{timestamp}"
+        
+        try:
+            # Збереження у PNG
+            png_file = f"{base_filename}.png"
+            plt.savefig(png_file, dpi=300, bbox_inches='tight')
+            print(f"  • {png_file} (зображення)")
+        except Exception as e:
+            print(f"  • Помилка збереження PNG: {e}")
+        
+        try:
+            # Збереження у PDF 
+            pdf_file = f"{base_filename}.pdf"
+            plt.savefig(pdf_file, format='pdf', bbox_inches='tight')
+            print(f"  • {pdf_file} (документ)")
+        except Exception as e:
+            print(f"  • Помилка збереження PDF: {e}")
+            
+        try:
+            # Збереження у SVG
+            svg_file = f"{base_filename}.svg"
+            plt.savefig(svg_file, format='svg', bbox_inches='tight')
+            print(f"  • {svg_file} (векторний графік)")
+        except Exception as e:
+            print(f"  • Помилка збереження SVG: {e}")
+        
+        print("\nГрафік також відображено на екрані.")
+        plt.show()
+        
+    except Exception as e:
+        print(f"Помилка при візуалізації: {e}")
+        import traceback
+        traceback.print_exc()
     
     def save_results(self, filename=None):
         """
