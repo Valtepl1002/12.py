@@ -791,34 +791,20 @@ def main():
                         print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
                 
                # Порівняння результатів
-                if all_results:
-                    print("\n" + "="*60)
-                    print("Порівняння результатів всіх методів")
-                    print("="*60)
+               if all_results:
+                   print("\n" + "="*60)
+                   print("ПОРІВНЯННЯ РЕЗУЛЬТАТІВ ВСІХ МЕТОДІВ")
+                   print("="*60)
     
-                    # Знаходимо найкращий результат 
-                    best_result = min(all_results, key=lambda x: x['production_cost'])
-                    
-                    # Безпечне отримання значень
-                    method_name = str(best_result.get('method', 'Невідомий')).strip()
-                    cost_value = float(best_result.get('production_cost', 0))
-                    optimal_values = best_result.get('optimal_values', [0, 0, 0])
+                   # Знаходимо найкращий результат 
+                   best_result = min(all_results, key=lambda x: x['production_cost'])
     
-                    print("\nНАЙКРАЩИЙ РЕЗУЛЬТАТ:")
-                    print(f"Метод: {method_name}")
-                    print(f"Витрати: {cost_value:.2f}")
-                    print(f"Оптимальні параметри: {optimal_values}")
+                   print("\nНайкращий результат:")
+                   print(f"Метод: {best_result['method']}")
+                   print(f"Витрати: {best_result['production_cost']:.2f}")
+                   print(f"Оптимальні параметри: {best_result['optimal_values']}")
     
-                    # Зберігаємо результати для можливості аналізу
-                    optimizer.optimization_results = {
-                        'success': True,
-                        'objective': 'cost',
-                        'method': method_name,
-                        'optimal_values': optimal_values,
-                        'production_cost': cost_value,
-                        'message': f"Найкращий результат серед {len(all_results)} методів"
-                    }
-                
+   
                 else:
                     print("\nЖоден з методів не дав успішних результатів")
                     print("Спробуйте інші методи або перевірте параметри")
