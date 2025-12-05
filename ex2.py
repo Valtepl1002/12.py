@@ -790,21 +790,20 @@ def main():
                     except Exception as e:
                         print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
                 
-               # Порівняння результатів
-               if all_results:
-                   print("\n" + "="*60)
-                   print("ПОРІВНЯННЯ РЕЗУЛЬТАТІВ ВСІХ МЕТОДІВ")
-                   print("="*60)
-    
-                   # Знаходимо найкращий результат 
-                   best_result = min(all_results, key=lambda x: x['production_cost'])
-    
-                   print("\nНайкращий результат:")
-                   print(f"Метод: {best_result['method']}")
-                   print(f"Витрати: {best_result['production_cost']:.2f}")
-                   print(f"Оптимальні параметри: {best_result['optimal_values']}")
-    
-   
+                # Порівняння результатів
+                if all_results:
+                    print("\n" + "="*60)
+                    print("ПОРІВНЯННЯ РЕЗУЛЬТАТІВ ВСІХ МЕТОДІВ")
+                    print("="*60)
+                    
+                    # Знаходимо найкращий результат 
+                    best_result = min(all_results, key=lambda x: x['production_cost'])
+                    
+                    print("\nНайкращий результат:")
+                    print(f"Метод: {best_result['method']}")
+                    print(f"Витрати: {best_result['production_cost']:.2f}")
+                    print(f"Оптимальні параметри: {best_result['optimal_values']}")
+                    
                 else:
                     print("\nЖоден з методів не дав успішних результатів")
                     print("Спробуйте інші методи або перевірте параметри")
