@@ -677,55 +677,39 @@ def main():
                     try:
                         # Якщо це BFGS, використовуємо спеціальний виклик
                         if method == 'BFGS':
-                            # Отримуємо параметри
-                            if user_params:
-                                cost_coeff = user_params.get('cost_coefficients', optimizer.config['cost_coefficients'])
-                                quality_params = user_params.get('quality_params', optimizer.config['quality_params'])
-                            else:
-                                cost_coeff = optimizer.config['cost_coefficients']
-                                quality_params = optimizer.config.get('quality_params', [0.1, 0.05])
-                            
-                            # Цільова функція
-                            def objective_func(x):
-                                material_cost = cost_coeff[0] * x[0]
-                                energy_cost = cost_coeff[1] * x[1] + cost_coeff[2] * x[2]
-                                quality_penalty = 200 * np.exp(-quality_params[0] * x[1]) + \
-                                                150 * np.exp(-quality_params[1] * x[2])
-                                return material_cost + energy_cost + quality_penalty
-                            
-                            # Градієнт для BFGS
-                            def gradient_func(x):
-                                grad = np.zeros(3)
-                                grad[0] = cost_coeff[0]  # Похідна по швидкості
-                                grad[1] = cost_coeff[1] - 200 * quality_params[0] * np.exp(-quality_params[0] * x[1])
-                                grad[2] = cost_coeff[2] - 150 * quality_params[1] * np.exp(-quality_params[1] * x[2])
-                                return grad
-                            
-                            # Початкове наближення
+                            objective_func = lambda x: optimizer.production_cost_function(x, user_params)
                             x0 = [50, 150, 5]
                             
-                            # Викликаємо minimize З градієнтом
+                            # Змінюємо параметри для кращої стабільності
                             result = minimize(
                                 objective_func,
                                 x0,
                                 method='BFGS',
-                                jac=gradient_func, 
                                 bounds=optimizer.config['bounds'],
-                                options={'disp': True, 'maxiter': 1000, 'gtol': 1e-8}
+                                options={
+                                    'disp': True,
+                                    'maxiter': 500,  # Менше ітерацій
+                                    'gtol': 1e-6,     # Точність
+                                    'eps': 1e-8       # Крок для чисельного градієнта
+                                }
                             )
                             
-                            if result.success:
+                            # Більш лояльна перевірка
+                            if result.success or 'Desired error not necessarily achieved' in str(result.message):
                                 optimal_cost = objective_func(result.x)
-                                # Додаткова перевірка на реалістичність
-                                if optimal_cost > 0 and optimal_cost < 1000000:
+                                # Перевіряємо, чи в межах bounds
+                                if (optimizer.config['bounds'][0][0] <= result.x[0] <= optimizer.config['bounds'][0][1] and
+                                    optimizer.config['bounds'][1][0] <= result.x[1] <= optimizer.config['bounds'][1][1] and
+                                    optimizer.config['bounds'][2][0] <= result.x[2] <= optimizer.config['bounds'][2][1]):
+                                    
                                     all_results.append({
                                         'method': method,
                                         'optimal_values': result.x.tolist(),
                                         'production_cost': optimal_cost
                                     })
-                                    print(f"Метод {method} успішний")
+                                    print(f"Метод {method} дав прийнятний результат")
                                 else:
-                                    print(f"Метод {method} знайшов нереалістичне рішення (витрати: {optimal_cost:.2f})")
+                                    print(f"Метод {method} вийшов за межі обмежень")
                             else:
                                 print(f"Метод {method} не вдалося виконати: {result.message}")
                         
