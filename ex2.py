@@ -673,8 +673,42 @@ def main():
                     print(f"\n{'='*40}")
                     print(f"Метод: {method}")
                     print(f"{'='*40}")
-                    
+
                     try:
+                        if method == 'BFGS':
+                            # Для BFGS використовуємо тільки bounds, без constraints
+                            if user_params:
+                                def objective_func(x):
+                                    return optimizer.production_cost_function(x, user_params)
+                            else:
+                                def objective_func(x):
+                                    return optimizer.production_cost_function(x, None)
+                            
+                            # Початкове наближення
+                            x0 = [50, 150, 5]
+                            
+                            # Викликаємо minimize без constraints
+                            result = minimize(
+                                objective_func,
+                                x0,
+                                method='BFGS',
+                                bounds=optimizer.config['bounds'],
+                                options={'disp': True, 'maxiter': 1000}
+                            )
+                            
+                            # Обробка результату
+                            if result.success:
+                                optimal_cost = objective_func(result.x)
+                                all_results.append({
+                                    'method': method,
+                                    'optimal_values': result.x.tolist(),
+                                    'production_cost': optimal_cost
+                                })
+                                print(f"Метод {method} успішний")
+                            else:
+                                print(f"Метод {method} не вдалося виконати: {result.message}")
+                    
+                    else:
                         result = optimizer.optimize_production(
                             objective='cost', 
                             method=method, 
