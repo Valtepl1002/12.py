@@ -677,37 +677,61 @@ def main():
                     try:
                         # Якщо це BFGS, використовуємо спеціальний виклик
                         if method == 'BFGS':
-                            objective_func = lambda x: optimizer.production_cost_function(x, user_params)
+                            if user_params:
+                                cost_coeff = user_params.get('cost_coefficients', optimizer.config['cost_coefficients'])
+                                quality_params = user_params.get('quality_params', optimizer.config['quality_params'])
+                            else:
+                                cost_coeff = optimizer.config['cost_coefficients']
+                                quality_params = optimizer.config.get('quality_params', [0.1, 0.05])
+                            
+                            bounds = optimizer.config['bounds']
+                            
+                            def objective_func_with_penalty(x):
+                                # Основна функція
+                                material_cost = cost_coeff[0] * x[0]
+                                energy_cost = cost_coeff[1] * x[1] + cost_coeff[2] * x[2]
+                                quality_penalty = 200 * np.exp(-quality_params[0] * x[1]) + \
+                                                150 * np.exp(-quality_params[1] * x[2])
+                                main_cost = material_cost + energy_cost + quality_penalty
+                                
+                                # Штраф за вихід за межі
+                                penalty = 0
+                                if x[0] < bounds[0][0] or x[0] > bounds[0][1]:
+                                    penalty += 1e10 * (min(abs(x[0] - bounds[0][0]), abs(x[0] - bounds[0][1])) ** 2)
+                                if x[1] < bounds[1][0] or x[1] > bounds[1][1]:
+                                    penalty += 1e10 * (min(abs(x[1] - bounds[1][0]), abs(x[1] - bounds[1][1])) ** 2)
+                                if x[2] < bounds[2][0] or x[2] > bounds[2][1]:
+                                    penalty += 1e10 * (min(abs(x[2] - bounds[2][0]), abs(x[2] - bounds[2][1])) ** 2)
+                                
+                                return main_cost + penalty
+                            
+                            # Початкове наближення
                             x0 = [50, 150, 5]
                             
-                            # Змінюємо параметри для кращої стабільності
                             result = minimize(
-                                objective_func,
+                                objective_func_with_penalty,
                                 x0,
                                 method='BFGS',
-                                bounds=optimizer.config['bounds'],
-                                options={
-                                    'disp': True,
-                                    'maxiter': 500,  # Менше ітерацій
-                                    'gtol': 1e-6,     # Точність
-                                    'eps': 1e-8       # Крок для чисельного градієнта
-                                }
+                                options={'disp': True, 'maxiter': 1000, 'gtol': 1e-8}
                             )
                             
-                            # Більш лояльна перевірка
-                            if result.success or 'Desired error not necessarily achieved' in str(result.message):
-                                optimal_cost = objective_func(result.x)
-                                # Перевіряємо, чи в межах bounds
-                                if (optimizer.config['bounds'][0][0] <= result.x[0] <= optimizer.config['bounds'][0][1] and
-                                    optimizer.config['bounds'][1][0] <= result.x[1] <= optimizer.config['bounds'][1][1] and
-                                    optimizer.config['bounds'][2][0] <= result.x[2] <= optimizer.config['bounds'][2][1]):
+                            if result.success:
+                                optimal_cost_without_penalty = cost_coeff[0] * result.x[0] + \
+                                                             cost_coeff[1] * result.x[1] + cost_coeff[2] * result.x[2] + \
+                                                             200 * np.exp(-quality_params[0] * result.x[1]) + \
+                                                             150 * np.exp(-quality_params[1] * result.x[2])
+                                
+                                # Перевіряємо, чи в межах
+                                if (bounds[0][0] <= result.x[0] <= bounds[0][1] and
+                                    bounds[1][0] <= result.x[1] <= bounds[1][1] and
+                                    bounds[2][0] <= result.x[2] <= bounds[2][1]):
                                     
                                     all_results.append({
                                         'method': method,
                                         'optimal_values': result.x.tolist(),
-                                        'production_cost': optimal_cost
+                                        'production_cost': optimal_cost_without_penalty
                                     })
-                                    print(f"Метод {method} дав прийнятний результат")
+                                    print(f"Метод {method} успішний")
                                 else:
                                     print(f"Метод {method} вийшов за межі обмежень")
                             else:
