@@ -792,6 +792,8 @@ def main():
                 
                # Порівняння результатів
                 if all_results:
+                    print(f"\nЗнайдено {len(all_results)} успішних результатів з {len(methods)} методів")
+                    
                     print("\n" + "="*60)
                     print("ПОРІВНЯННЯ РЕЗУЛЬТАТІВ ВСІХ МЕТОДІВ")
                     print("="*60)
@@ -811,11 +813,11 @@ def main():
                         'method': best_result['method'],
                         'optimal_values': best_result['optimal_values'],
                         'production_cost': best_result['production_cost'],
-                        'message': f"Найкращий результат серед {len(methods)} методів"
+                        'message': f"Найкращий результат серед {len(all_results)} методів"
                     }
                 
                 else:
-                    print("\nЖоден з методів не дав успішних результатів")
+                    print(f"\nЖоден з {len(methods)} методів не дав успішних результатів")
                     print("Спробуйте інші методи або перевірте параметри")
                 
             elif choice == '3':
