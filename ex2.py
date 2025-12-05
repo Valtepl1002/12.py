@@ -326,7 +326,7 @@ class ProductionOptimizer:
                 
                 return linear_results
             else:
-                print(f"✗ Лінійна оптимізація не вдалась: {result.message}")
+                print(f"Лінійна оптимізація не вдалась: {result.message}")
                 
                 # Діагностика проблеми
                 if "infeasible" in result.message.lower():
@@ -351,10 +351,6 @@ class ProductionOptimizer:
         except Exception as e:
             print(f"Помилка при лінійній оптимізації: {e}")
             return None
-            
-    except Exception as e:
-        print(f"Помилка при лінійній оптимізації: {e}")
-        return None
     
     def analyze_results(self):
         """Аналіз та візуалізація результатів"""
