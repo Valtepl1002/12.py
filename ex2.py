@@ -224,7 +224,15 @@ class ProductionOptimizer:
             
             if result.success:
                 print(f"\n✓ ОПТИМІЗАЦІЯ УСПІШНА")
-                
+    
+                # Обробка різних методів (різні поля для ітерацій)
+                if method == 'COBYLA':
+                    iterations = result.nfev  # COBYLA використовує nfev замість nit
+                elif hasattr(result, 'nit'):
+                    iterations = result.nit
+                else:
+                    iterations = result.nfev if hasattr(result, 'nfev') else 0
+    
                 # Збереження результатів
                 self.optimization_results = {
                     'success': True,
@@ -232,7 +240,7 @@ class ProductionOptimizer:
                     'method': method,
                     'optimal_values': result.x.tolist(),
                     'optimal_function_value': result.fun,
-                    'iterations': result.nit,
+                    'iterations': iterations,  
                     'message': result.message
                 }
                 
