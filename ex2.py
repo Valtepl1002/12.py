@@ -398,6 +398,7 @@ class ProductionOptimizer:
             return
         
         try:
+            # Створюємо графік
             fig, axes = plt.subplots(2, 2, figsize=(12, 10))
             fig.suptitle('Результати оптимізації виробничих параметрів', fontsize=16)
             
@@ -410,7 +411,7 @@ class ProductionOptimizer:
             axes[0, 0].set_ylabel('Значення')
             axes[0, 0].grid(True, alpha=0.3)
             
-            # 2. Вплив параметрів на витрати 
+            # 2. Вплив параметрів на витрати (якщо є дані)
             if self.data is not None and len(self.data) > 0:
                 sample_size = min(50, len(self.data))
                 sample = self.data.sample(sample_size, random_state=42)
@@ -478,32 +479,41 @@ class ProductionOptimizer:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             base_filename = f"optimization_results_{timestamp}"
             
+            print(f"\nЗбереження графіків у файли...")
+            
             try:
                 # Збереження у PNG
                 png_file = f"{base_filename}.png"
                 plt.savefig(png_file, dpi=300, bbox_inches='tight')
-                print(f"  • {png_file} (зображення)")
+                print(f"✓ PNG файл: {png_file}")
             except Exception as e:
-                print(f"  • Помилка збереження PNG: {e}")
+                print(f"✗ Помилка збереження PNG: {e}")
             
             try:
                 # Збереження у PDF 
                 pdf_file = f"{base_filename}.pdf"
                 plt.savefig(pdf_file, format='pdf', bbox_inches='tight')
-                print(f"  • {pdf_file} (документ)")
+                print(f"✓ PDF файл: {pdf_file}")
             except Exception as e:
-                print(f"  • Помилка збереження PDF: {e}")
+                print(f"✗ Помилка збереження PDF: {e}")
                 
             try:
                 # Збереження у SVG
                 svg_file = f"{base_filename}.svg"
                 plt.savefig(svg_file, format='svg', bbox_inches='tight')
-                print(f"  • {svg_file} (векторний графік)")
+                print(f"✓ SVG файл: {svg_file}")
             except Exception as e:
-                print(f"  • Помилка збереження SVG: {e}")
+                print(f"✗ Помилка збереження SVG: {e}")
             
-            print("\nГрафік також відображено на екрані.")
+            print(f"\nФайли успішно збережено в поточній директорії.")
+            print("Для перегляду PDF файлу відкрийте його за допомогою PDF-читача.")
+            
+            # Показуємо графік на екрані
+            print("\nВідображення графіка на екрані...")
             plt.show()
+            
+            # Закриваємо графік після показу
+            plt.close()
             
         except Exception as e:
             print(f"Помилка при візуалізації: {e}")
