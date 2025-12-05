@@ -673,16 +673,12 @@ def main():
                     print(f"\n{'='*40}")
                     print(f"Метод: {method}")
                     print(f"{'='*40}")
-
+                    
+                    try:
+                        # Якщо це BFGS, використовуємо спеціальний виклик
                         if method == 'BFGS':
-                            try:
-                            # Визначимо цільову функцію
-                            if user_params:
-                                def objective_func(x):
-                                    return optimizer.production_cost_function(x, user_params)
-                            else:
-                                def objective_func(x):
-                                    return optimizer.production_cost_function(x, None)
+                            # Визначаємо цільову функцію
+                            objective_func = lambda x: optimizer.production_cost_function(x, user_params)
                             
                             # Початкове наближення
                             x0 = [50, 150, 5]
@@ -696,7 +692,6 @@ def main():
                                 options={'disp': True, 'maxiter': 1000}
                             )
                             
-                            # Обробка результату
                             if result.success:
                                 optimal_cost = objective_func(result.x)
                                 all_results.append({
@@ -707,13 +702,9 @@ def main():
                                 print(f"Метод {method} успішний")
                             else:
                                 print(f"Метод {method} не вдалося виконати: {result.message}")
-
-                        except Exception as e:
-                            print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
-
-                    # Для всіх інших методів
-                    else:
-                        try:
+                        
+                        # Для всіх інших методів
+                        else:
                             result = optimizer.optimize_production(
                                 objective='cost', 
                                 method=method, 
@@ -730,8 +721,8 @@ def main():
                             else:
                                 print(f"Метод {method} не вдалося виконати")
                                 
-                        except Exception as e:
-                            print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
+                    except Exception as e:
+                        print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
                 
                 # Порівняння результатів
                 if all_results:
@@ -739,7 +730,7 @@ def main():
                     print("ПОРІВНЯННЯ РЕЗУЛЬТАТІВ ВСІХ МЕТОДІВ")
                     print("="*60)
                     
-                    # Знаходимо найкращий результат (мінімальні витрати)
+                    # Знаходимо найкращий результат 
                     best_result = min(all_results, key=lambda x: x['production_cost'])
                     
                     print("\nНайкращий результат:")
