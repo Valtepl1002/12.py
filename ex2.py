@@ -576,7 +576,7 @@ class ProductionOptimizer:
                 print("  • Браузера (Chrome, Firefox)")
                 print("  • Вбудованого PDF читача вашої ОС")
             else:
-                print("\n✗ Не вдалося зберегти жодного файлу")
+                print("\nНе вдалося зберегти жодного файлу")
             
             print(f"\n" + "="*60)
             
