@@ -816,23 +816,168 @@ def main():
                 
                 methods = ['SLSQP', 'COBYLA', 'trust-constr', 'Nelder-Mead', 'BFGS']
                 all_results = []
+
+                use_custom = input("Використати користувацькі параметри? (так/ні): ").strip().lower()
+                user_params = None
+                
+                if use_custom in ['ні', 'н']:
+                    try:
+                        # Для прибутку потрібні коефіцієнти цін та витрат
+                        price_coeff = list(map(float, input("Коефіцієнти цін (3 числа через пробіл): ").split()))
+                        cost_coeff = list(map(float, input("Коефіцієнти витрат (3 числа через пробіл): ").split()))
+                        quality_params = list(map(float, input("Параметри якості (2 числа через пробіл): ").split()))
+                        user_params = {
+                            'price_coefficients': price_coeff,
+                            'cost_coefficients': cost_coeff,
+                            'quality_params': quality_params
+                        }
+                        print("Користувацькі параметри застосовані")
+                    except:
+                        print("Помилка введення, використовуються параметри за замовчуванням")
+                else:
+                    print("Використовуються параметри за замовчуванням")
                 
                 for method in methods:
                     print(f"\n{'='*40}")
                     print(f"Метод: {method}")
                     print(f"{'='*40}")
                     
-                    result = optimizer.optimize_production(
-                        objective='profit',
-                        method=method
-                    )
+                    # Для BFGS додаємо спеціальну обробку
+                    if method == 'BFGS':
+                        try:
+                            # Використовуємо користувацькі параметри або за замовчуванням
+                            if user_params:
+                                price_coeff = user_params.get('price_coefficients', optimizer.config['price_coefficients'])
+                                cost_coeff = user_params.get('cost_coefficients', optimizer.config['cost_coefficients'])
+                                quality_params = user_params.get('quality_params', optimizer.config['quality_params'])
+                            else:
+                                price_coeff = optimizer.config['price_coefficients']
+                                cost_coeff = optimizer.config['cost_coefficients']
+                                quality_params = optimizer.config.get('quality_params', [0.1, 0.05])
+                            
+                            # Отримуємо межі
+                            bounds = optimizer.config['bounds']
+                            
+                            # Функція для перетворення з необмежених змінних в обмежені
+                            def transform_to_bounded(y):
+                                x = np.zeros(3)
+                                # y[0] -> x[0] ∈ [10, 100]
+                                x[0] = bounds[0][0] + (bounds[0][1] - bounds[0][0]) * (np.tanh(y[0]) + 1) / 2
+                                # y[1] -> x[1] ∈ [50, 300]
+                                x[1] = bounds[1][0] + (bounds[1][1] - bounds[1][0]) * (np.tanh(y[1]) + 1) / 2
+                                # y[2] -> x[2] ∈ [1, 10]
+                                x[2] = bounds[2][0] + (bounds[2][1] - bounds[2][0]) * (np.tanh(y[2]) + 1) / 2
+                                return x
+                            
+                            # Цільова функція прибутку в необмежених змінних
+                            def profit_func_unbounded(y):
+                                x = transform_to_bounded(y)
+                                
+                                # Дохід від продажу
+                                revenue = price_coeff[0] * x[0] + price_coeff[1] * x[1] + price_coeff[2] * x[2]
+                                
+                                # Витрати
+                                material_cost = cost_coeff[0] * x[0]
+                                energy_cost = cost_coeff[1] * x[1] + cost_coeff[2] * x[2]
+                                quality_penalty = 200 * np.exp(-quality_params[0] * x[1]) + \
+                                                150 * np.exp(-quality_params[1] * x[2])
+                                total_cost = material_cost + energy_cost + quality_penalty
+                                
+                                # Негативний прибуток для мінімізації
+                                return -(revenue - total_cost)
+                            
+                            # Початкове наближення в необмежених змінних
+                            def transform_to_unbounded(x):
+                                y = np.zeros(3)
+                                y[0] = np.arctanh(2 * (x[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0]) - 1)
+                                y[1] = np.arctanh(2 * (x[1] - bounds[1][0]) / (bounds[1][1] - bounds[1][0]) - 1)
+                                y[2] = np.arctanh(2 * (x[2] - bounds[2][0]) / (bounds[2][1] - bounds[2][0]) - 1)
+                                return y
+                            
+                            y0 = transform_to_unbounded([50, 150, 5])
+
+                            # Викликаємо minimize без bounds 
+                            result = minimize(
+                                profit_func_unbounded,
+                                y0,
+                                method='BFGS',
+                                options={'disp': True, 'maxiter': 1000, 'gtol': 1e-8}
+                            )
+                            
+                            if result.success:
+                                # Перетворюємо результат назад
+                                x_optimal = transform_to_bounded(result.x)
+                                optimal_profit = -profit_func_unbounded(result.x) 
+                                
+                                # Перевіряємо, чи в межах
+                                if (bounds[0][0] <= x_optimal[0] <= bounds[0][1] and
+                                    bounds[1][0] <= x_optimal[1] <= bounds[1][1] and
+                                    bounds[2][0] <= x_optimal[2] <= bounds[2][1]):
+                                    
+                                    # Обробка різних методів (різні поля для ітерацій)
+                                    if method == 'COBYLA':
+                                        iterations = result.nfev
+                                    elif hasattr(result, 'nit'):
+                                        iterations = result.nit
+                                    else:
+                                        iterations = result.nfev if hasattr(result, 'nfev') else 0
+
+                                    # Зберігаємо результати в головний об'єкт
+                                    optimizer.optimization_results = {
+                                        'success': True,
+                                        'objective': 'profit',
+                                        'method': method,
+                                        'optimal_values': x_optimal.tolist(),
+                                        'optimal_function_value': result.fun,
+                                        'iterations': iterations,
+                                        'message': result.message,
+                                        'production_cost': (price_coeff[0] * x_optimal[0] + 
+                                                           price_coeff[1] * x_optimal[1] + 
+                                                           price_coeff[2] * x_optimal[2]) - optimal_profit,
+                                        'revenue': price_coeff[0] * x_optimal[0] + 
+                                                  price_coeff[1] * x_optimal[1] + 
+                                                  price_coeff[2] * x_optimal[2],
+                                        'profit': optimal_profit
+                                    }
+                                    
+                                    print(f"\n✓ ОПТИМІЗАЦІЯ УСПІШНА (BFGS)")
+                                    
+                                    all_results.append({
+                                        'method': method,
+                                        'optimal_values': x_optimal.tolist(),
+                                        'profit': optimal_profit
+                                    })
+                                    print(f"Метод {method} успішний")
+                                    print(f"Оптимальні значення: {x_optimal}")
+                                    print(f"Прибуток: {optimal_profit:.2f}")
+                                else:
+                                    print(f"Метод {method} вийшов за межі обмежень після перетворення")
+                            else:
+                                print(f"Метод {method} не вдалося виконати: {result.message}")
+                        except Exception as e:
+                            print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
                     
-                    if result.get('success'):
-                        all_results.append({
-                            'method': method,
-                            'optimal_values': result.get('optimal_values'),
-                            'profit': result.get('profit')
-                        })
+                    # Для всіх інших методів
+                    else:
+                        try:
+                            result = optimizer.optimize_production(
+                                objective='profit',
+                                method=method,
+                                user_params=user_params
+                            )
+                            
+                            if result.get('success'):
+                                all_results.append({
+                                    'method': method,
+                                    'optimal_values': result.get('optimal_values'),
+                                    'profit': result.get('profit')
+                                })
+                                print(f"Метод {method} успішний")
+                            else:
+                                print(f"Метод {method} не вдалося виконати")
+                                
+                        except Exception as e:
+                            print(f"Метод {method} викликав помилку: {str(e)[:100]}...")
                 
                 # Порівняння результатів
                 if all_results:
