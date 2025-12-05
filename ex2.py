@@ -734,6 +734,19 @@ def main():
                                 if (bounds[0][0] <= x_optimal[0] <= bounds[0][1] and
                                     bounds[1][0] <= x_optimal[1] <= bounds[1][1] and
                                     bounds[2][0] <= x_optimal[2] <= bounds[2][1]):
+
+                                    optimizer.optimization_results = {
+                                        'success': True,
+                                        'objective': 'cost',
+                                        'method': method,
+                                        'optimal_values': x_optimal.tolist(),
+                                        'optimal_function_value': optimal_cost,
+                                        'iterations': result.nit,
+                                        'message': result.message,
+                                        'production_cost': optimal_cost
+                                    }
+        
+                                    print(f"\n✓ ОПТИМІЗАЦІЯ УСПІШНА (BFGS)")
                                     
                                     all_results.append({
                                         'method': method,
