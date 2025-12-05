@@ -637,57 +637,57 @@ def main():
             choice = input("\nВиберіть опцію (1-8): ").strip()
             
             if choice == '1':
-    # Завантаження даних
-    filename = input("Введіть ім'я файлу: ").strip()
-    
-    if filename:
-        # Перевіряємо, чи існує файл
-        if os.path.exists(filename):
-            # Файл існує - завантажуємо
-            success = optimizer.load_data(filename)
-            if success:
-                # Показуємо весь вміст завантажених даних
-                print(f"\n{'='*60}")
-                print("ДАНІ УСПІШНО ЗАВАНТАЖЕНІ")
-                print(f"{'='*60}")
-                print(f"Файл: {filename}")
-                print(f"Кількість записів: {len(optimizer.data)}")
-                print(f"Колонки: {list(optimizer.data.columns)}")
+                # Завантаження даних
+                filename = input("Введіть ім'я файлу: ").strip()
                 
-                print(f"\n{'='*60}")
-                print("ПОВНИЙ ВМІСТ ФАЙЛУ:")
-                print(f"{'='*60}")
-                
-                # Показуємо весь DataFrame
-                with pd.option_context('display.max_rows', None, 
-                                       'display.max_columns', None,
-                                       'display.width', 1000):
-                    print(optimizer.data)
-                
-                # Показуємо статистику в будь-якому випадку
-                print(f"\n{'='*60}")
-                print("СТАТИСТИКА ДАНИХ:")
-                print(f"{'='*60}")
-                print(optimizer.data.describe())
-        else:
-            # Файл не існує - створюємо тестові дані і зберігаємо у файл
-            print(f"\nФайл '{filename}' не знайдено. Створення тестових даних і збереження у файл...")
-            
-            # Створюємо тестові дані
-            optimizer._generate_test_data()
-            
-            # Додаємо розширення .txt, якщо його немає
-            if not filename.endswith('.txt'):
-                filename = filename + '.txt'
-            
-            try:
-                # Зберігаємо дані у TXT файл 
-                optimizer.data.to_csv(filename, sep='\t', index=False)
-                print(f"Створено файл '{filename}' з {len(optimizer.data)} записами")
-                
-            except Exception as e:
-                print(f"Помилка при створенні файлу: {e}")
-                print("Дані створені тільки в пам'яті.")
+                if filename:
+                    # Перевіряємо, чи існує файл
+                    if os.path.exists(filename):
+                        # Файл існує - завантажуємо
+                        success = optimizer.load_data(filename)
+                        if success:
+                            # Показуємо весь вміст завантажених даних
+                            print(f"\n{'='*60}")
+                            print("ДАНІ УСПІШНО ЗАВАНТАЖЕНІ")
+                            print(f"{'='*60}")
+                            print(f"Файл: {filename}")
+                            print(f"Кількість записів: {len(optimizer.data)}")
+                            print(f"Колонки: {list(optimizer.data.columns)}")
+                            
+                            print(f"\n{'='*60}")
+                            print("ПОВНИЙ ВМІСТ ФАЙЛУ:")
+                            print(f"{'='*60}")
+                            
+                            # Показуємо весь DataFrame
+                            with pd.option_context('display.max_rows', None, 
+                                                   'display.max_columns', None,
+                                                   'display.width', 1000):
+                                print(optimizer.data)
+                            
+                            # Показуємо статистику в будь-якому випадку
+                            print(f"\n{'='*60}")
+                            print("СТАТИСТИКА ДАНИХ:")
+                            print(f"{'='*60}")
+                            print(optimizer.data.describe())
+                    else:
+                        # Файл не існує - створюємо тестові дані і зберігаємо у файл
+                        print(f"\nФайл '{filename}' не знайдено. Створення тестових даних і збереження у файл...")
+                        
+                        # Створюємо тестові дані
+                        optimizer._generate_test_data()
+                        
+                        # Додаємо розширення .txt, якщо його немає
+                        if not filename.endswith('.txt'):
+                            filename = filename + '.txt'
+                        
+                        try:
+                            # Зберігаємо дані у TXT файл 
+                            optimizer.data.to_csv(filename, sep='\t', index=False)
+                            print(f"Створено файл '{filename}' з {len(optimizer.data)} записами")
+                            
+                        except Exception as e:
+                            print(f"Помилка при створенні файлу: {e}")
+                            print("Дані створені тільки в пам'яті.")
             
             elif choice == '2':
                 # Оптимізація витрат - запуск всіх методів
