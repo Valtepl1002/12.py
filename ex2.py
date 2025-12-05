@@ -684,59 +684,70 @@ def main():
                                 cost_coeff = optimizer.config['cost_coefficients']
                                 quality_params = optimizer.config.get('quality_params', [0.1, 0.05])
                             
+                            # Отримуємо межі
                             bounds = optimizer.config['bounds']
                             
-                            def objective_func_with_penalty(x):
-                                # Основна функція
+                            # Функція для перетворення з необмежених змінних в обмежені
+                            def transform_to_bounded(y):
+                                x = np.zeros(3)
+                                # y[0] -> x[0] ∈ [10, 100]
+                                x[0] = bounds[0][0] + (bounds[0][1] - bounds[0][0]) * (np.tanh(y[0]) + 1) / 2
+                                # y[1] -> x[1] ∈ [50, 300]
+                                x[1] = bounds[1][0] + (bounds[1][1] - bounds[1][0]) * (np.tanh(y[1]) + 1) / 2
+                                # y[2] -> x[2] ∈ [1, 10]
+                                x[2] = bounds[2][0] + (bounds[2][1] - bounds[2][0]) * (np.tanh(y[2]) + 1) / 2
+                                return x
+                            
+                            # Цільова функція в необмежених змінних
+                            def objective_func_unbounded(y):
+                                x = transform_to_bounded(y)
                                 material_cost = cost_coeff[0] * x[0]
                                 energy_cost = cost_coeff[1] * x[1] + cost_coeff[2] * x[2]
                                 quality_penalty = 200 * np.exp(-quality_params[0] * x[1]) + \
                                                 150 * np.exp(-quality_params[1] * x[2])
-                                main_cost = material_cost + energy_cost + quality_penalty
-                                
-                                # Штраф за вихід за межі
-                                penalty = 0
-                                if x[0] < bounds[0][0] or x[0] > bounds[0][1]:
-                                    penalty += 1e10 * (min(abs(x[0] - bounds[0][0]), abs(x[0] - bounds[0][1])) ** 2)
-                                if x[1] < bounds[1][0] or x[1] > bounds[1][1]:
-                                    penalty += 1e10 * (min(abs(x[1] - bounds[1][0]), abs(x[1] - bounds[1][1])) ** 2)
-                                if x[2] < bounds[2][0] or x[2] > bounds[2][1]:
-                                    penalty += 1e10 * (min(abs(x[2] - bounds[2][0]), abs(x[2] - bounds[2][1])) ** 2)
-                                
-                                return main_cost + penalty
+                                return material_cost + energy_cost + quality_penalty
                             
-                            # Початкове наближення
-                            x0 = [50, 150, 5]
+                            # Початкове наближення в необмежених змінних
+                            def transform_to_unbounded(x):
+                                y = np.zeros(3)
+                                y[0] = np.arctanh(2 * (x[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0]) - 1)
+                                y[1] = np.arctanh(2 * (x[1] - bounds[1][0]) / (bounds[1][1] - bounds[1][0]) - 1)
+                                y[2] = np.arctanh(2 * (x[2] - bounds[2][0]) / (bounds[2][1] - bounds[2][0]) - 1)
+                                return y
                             
+                            y0 = transform_to_unbounded([50, 150, 5])
+                            
+                            # Викликаємо minimize без bounds 
                             result = minimize(
-                                objective_func_with_penalty,
-                                x0,
+                                objective_func_unbounded,
+                                y0,
                                 method='BFGS',
                                 options={'disp': True, 'maxiter': 1000, 'gtol': 1e-8}
                             )
                             
                             if result.success:
-                                optimal_cost_without_penalty = cost_coeff[0] * result.x[0] + \
-                                                             cost_coeff[1] * result.x[1] + cost_coeff[2] * result.x[2] + \
-                                                             200 * np.exp(-quality_params[0] * result.x[1]) + \
-                                                             150 * np.exp(-quality_params[1] * result.x[2])
+                                # Перетворюємо результат назад
+                                x_optimal = transform_to_bounded(result.x)
+                                optimal_cost = objective_func_unbounded(result.x)
                                 
                                 # Перевіряємо, чи в межах
-                                if (bounds[0][0] <= result.x[0] <= bounds[0][1] and
-                                    bounds[1][0] <= result.x[1] <= bounds[1][1] and
-                                    bounds[2][0] <= result.x[2] <= bounds[2][1]):
+                                if (bounds[0][0] <= x_optimal[0] <= bounds[0][1] and
+                                    bounds[1][0] <= x_optimal[1] <= bounds[1][1] and
+                                    bounds[2][0] <= x_optimal[2] <= bounds[2][1]):
                                     
                                     all_results.append({
                                         'method': method,
-                                        'optimal_values': result.x.tolist(),
-                                        'production_cost': optimal_cost_without_penalty
+                                        'optimal_values': x_optimal.tolist(),
+                                        'production_cost': optimal_cost
                                     })
                                     print(f"Метод {method} успішний")
+                                    print(f"Оптимальні значення: {x_optimal}")
+                                    print(f"Витрати: {optimal_cost:.2f}")
                                 else:
-                                    print(f"Метод {method} вийшов за межі обмежень")
+                                    print(f"Метод {method} вийшов за межі обмежень після перетворення")
                             else:
                                 print(f"Метод {method} не вдалося виконати: {result.message}")
-                        
+
                         # Для всіх інших методів
                         else:
                             result = optimizer.optimize_production(
