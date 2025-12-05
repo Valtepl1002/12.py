@@ -391,213 +391,206 @@ class ProductionOptimizer:
         print(f"МЕТОД: {self.optimization_results['method']}")
         print(f"ЦІЛЬ: {self.optimization_results['objective']}")
     
-    def _visualize_results(self):
-        """Візуалізація результатів оптимізації та збереження графіків"""
-        if not self.optimization_results.get('success'):
-            print("Немає успішних результатів оптимізації для візуалізації")
-            return
+def _visualize_results(self):
+    """Візуалізація результатів оптимізації та збереження графіків"""
+    if not self.optimization_results.get('success'):
+        print("Немає успішних результатів оптимізації для візуалізації")
+        return
+    
+    try:
+        # Створюємо нову фігуру для кожного виклику
+        plt.figure(figsize=(12, 10))
         
-        try:
-            # Створюємо нову фігуру для кожного виклику
-            plt.figure(figsize=(12, 10))
+        # Створюємо 2x2 сітку графіків
+        fig, axes = plt.subplots(2, 2, figsize=(14, 12))
+        fig.suptitle('Результати оптимізації виробничих параметрів', fontsize=16, fontweight='bold')
+        
+        # 1. Оптимальні параметри
+        params = ['Швидкість', 'Температура', 'Тиск']
+        optimal = self.optimization_results['optimal_values']
+        units = ['од/год', '°C', 'бар']
+        
+        bars = axes[0, 0].bar(params, optimal, color=['blue', 'red', 'green'], alpha=0.7)
+        axes[0, 0].set_title('Оптимальні значення параметрів', fontsize=14, fontweight='bold')
+        axes[0, 0].set_ylabel('Значення', fontsize=12)
+        axes[0, 0].grid(True, alpha=0.3, linestyle='--')
+        axes[0, 0].set_axisbelow(True)
+        
+        # Додаємо значення на стовпчики
+        for bar, value, unit in zip(bars, optimal, units):
+            height = bar.get_height()
+            axes[0, 0].text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                           f'{value:.2f} {unit}', ha='center', va='bottom', fontsize=10)
+        
+        # 2. Вплив параметрів на витрати
+        if self.data is not None and len(self.data) > 0:
+            sample_size = min(50, len(self.data))
+            sample = self.data.sample(sample_size, random_state=42)
             
-            # Створюємо 2x2 сітку графіків
-            fig, axes = plt.subplots(2, 2, figsize=(14, 12))
-            fig.suptitle('Результати оптимізації виробничих параметрів', fontsize=16, fontweight='bold')
+            axes[0, 1].scatter(sample['production_speed'], sample['material_cost'], 
+                              alpha=0.6, label='Матеріали', s=50)
+            axes[0, 1].scatter(sample['temperature'], sample['energy_cost'], 
+                              alpha=0.6, label='Енергія', color='red', s=50)
+            axes[0, 1].set_title('Вплив параметрів на витрати', fontsize=14, fontweight='bold')
+            axes[0, 1].set_xlabel('Параметри', fontsize=12)
+            axes[0, 1].set_ylabel('Витрати, грн', fontsize=12)
+            axes[0, 1].legend(fontsize=10)
+            axes[0, 1].grid(True, alpha=0.3, linestyle='--')
+            axes[0, 1].set_axisbelow(True)
+        else:
+            axes[0, 1].text(0.5, 0.5, 'Немає даних для візуалізації\nСпочатку завантажте дані', 
+                           ha='center', va='center', transform=axes[0, 1].transAxes,
+                           fontsize=12, style='italic')
+            axes[0, 1].set_title('Вплив параметрів на витрати', fontsize=14, fontweight='bold')
+            axes[0, 1].set_xlabel('Параметри', fontsize=12)
+            axes[0, 1].set_ylabel('Витрати, грн', fontsize=12)
+        
+        # 3. Порівняння економічних показників
+        if self.optimization_results['objective'] == 'profit':
+            indicators = ['Витрати', 'Дохід', 'Прибуток']
+            values = [
+                self.optimization_results['production_cost'],
+                self.optimization_results['revenue'],
+                self.optimization_results['profit']
+            ]
+            colors = ['red', 'green', 'blue']
             
-            # 1. Оптимальні параметри
-            params = ['Швидкість', 'Температура', 'Тиск']
-            optimal = self.optimization_results['optimal_values']
-            units = ['од/год', '°C', 'бар']
-            
-            bars = axes[0, 0].bar(params, optimal, color=['blue', 'red', 'green'], alpha=0.7)
-            axes[0, 0].set_title('Оптимальні значення параметрів', fontsize=14, fontweight='bold')
-            axes[0, 0].set_ylabel('Значення', fontsize=12)
-            axes[0, 0].grid(True, alpha=0.3, linestyle='--')
-            axes[0, 0].set_axisbelow(True)
+            bars2 = axes[1, 0].bar(indicators, values, color=colors, alpha=0.7)
+            axes[1, 0].set_title('Економічні показники', fontsize=14, fontweight='bold')
+            axes[1, 0].set_ylabel('Грошові одиниці, грн', fontsize=12)
+            axes[1, 0].grid(True, alpha=0.3, linestyle='--')
+            axes[1, 0].set_axisbelow(True)
             
             # Додаємо значення на стовпчики
-            for bar, value, unit in zip(bars, optimal, units):
+            for bar, value in zip(bars2, values):
                 height = bar.get_height()
-                axes[0, 0].text(bar.get_x() + bar.get_width()/2., height + 0.01,
-                               f'{value:.2f} {unit}', ha='center', va='bottom', fontsize=10)
+                axes[1, 0].text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                               f'{value:.2f} грн', ha='center', va='bottom', fontsize=10)
+        else:
+            # Для мінімізації витрат показуємо тільки витрати
+            bars2 = axes[1, 0].bar(['Витрати'], [self.optimization_results['production_cost']], 
+                                  color='red', alpha=0.7)
+            axes[1, 0].set_title('Витрати на виробництво', fontsize=14, fontweight='bold')
+            axes[1, 0].set_ylabel('Грошові одиниці, грн', fontsize=12)
+            axes[1, 0].grid(True, alpha=0.3, linestyle='--')
+            axes[1, 0].set_axisbelow(True)
             
-            # 2. Вплив параметрів на витрати
-            if self.data is not None and len(self.data) > 0:
-                sample_size = min(50, len(self.data))
-                sample = self.data.sample(sample_size, random_state=42)
-                
-                axes[0, 1].scatter(sample['production_speed'], sample['material_cost'], 
-                                  alpha=0.6, label='Матеріали', s=50)
-                axes[0, 1].scatter(sample['temperature'], sample['energy_cost'], 
-                                  alpha=0.6, label='Енергія', color='red', s=50)
-                axes[0, 1].set_title('Вплив параметрів на витрати', fontsize=14, fontweight='bold')
-                axes[0, 1].set_xlabel('Параметри', fontsize=12)
-                axes[0, 1].set_ylabel('Витрати, грн', fontsize=12)
-                axes[0, 1].legend(fontsize=10)
-                axes[0, 1].grid(True, alpha=0.3, linestyle='--')
-                axes[0, 1].set_axisbelow(True)
-            else:
-                axes[0, 1].text(0.5, 0.5, 'Немає даних для візуалізації\nСпочатку завантажте дані', 
-                               ha='center', va='center', transform=axes[0, 1].transAxes,
-                               fontsize=12, style='italic')
-                axes[0, 1].set_title('Вплив параметрів на витрати', fontsize=14, fontweight='bold')
-                axes[0, 1].set_xlabel('Параметри', fontsize=12)
-                axes[0, 1].set_ylabel('Витрати, грн', fontsize=12)
+            # Додаємо значення на стовпчик
+            height = bars2[0].get_height()
+            axes[1, 0].text(bars2[0].get_x() + bars2[0].get_width()/2., height + 0.01,
+                           f'{height:.2f} грн', ha='center', va='bottom', fontsize=10)
+        
+        # 4. Просторова візуалізація 
+        try:
+            x = np.linspace(10, 100, 50)
+            y = np.linspace(50, 300, 50)
+            X, Y = np.meshgrid(x, y)
             
-            # 3. Порівняння економічних показників
-            if self.optimization_results['objective'] == 'profit':
-                indicators = ['Витрати', 'Дохід', 'Прибуток']
-                values = [
-                    self.optimization_results['production_cost'],
-                    self.optimization_results['revenue'],
-                    self.optimization_results['profit']
-                ]
-                colors = ['red', 'green', 'blue']
-                
-                bars2 = axes[1, 0].bar(indicators, values, color=colors, alpha=0.7)
-                axes[1, 0].set_title('Економічні показники', fontsize=14, fontweight='bold')
-                axes[1, 0].set_ylabel('Грошові одиниці, грн', fontsize=12)
-                axes[1, 0].grid(True, alpha=0.3, linestyle='--')
-                axes[1, 0].set_axisbelow(True)
-                
-                # Додаємо значення на стовпчики
-                for bar, value in zip(bars2, values):
-                    height = bar.get_height()
-                    axes[1, 0].text(bar.get_x() + bar.get_width()/2., height + 0.01,
-                                   f'{value:.2f} грн', ha='center', va='bottom', fontsize=10)
-            else:
-                # Для мінімізації витрат показуємо тільки витрати
-                bars2 = axes[1, 0].bar(['Витрати'], [self.optimization_results['production_cost']], 
-                                      color='red', alpha=0.7)
-                axes[1, 0].set_title('Витрати на виробництво', fontsize=14, fontweight='bold')
-                axes[1, 0].set_ylabel('Грошові одиниці, грн', fontsize=12)
-                axes[1, 0].grid(True, alpha=0.3, linestyle='--')
-                axes[1, 0].set_axisbelow(True)
-                
-                # Додаємо значення на стовпчик
-                height = bars2[0].get_height()
-                axes[1, 0].text(bars2[0].get_x() + bars2[0].get_width()/2., height + 0.01,
-                               f'{height:.2f} грн', ha='center', va='bottom', fontsize=10)
+            # Функція витрат для двох змінних 
+            Z = np.array([[self.production_cost_function([xi, yi, optimal[2]]) 
+                          for xi in x] for yi in y])
             
-            # 4. Просторова візуалізація 
-            try:
-                x = np.linspace(10, 100, 50)
-                y = np.linspace(50, 300, 50)
-                X, Y = np.meshgrid(x, y)
-                
-                # Функція витрат для двох змінних 
-                Z = np.array([[self.production_cost_function([xi, yi, optimal[2]]) 
-                              for xi in x] for yi in y])
-                
-                # Використовуємо contourf для більш плавного градієнта
-                contour = axes[1, 1].contourf(X, Y, Z, levels=30, cmap='viridis', alpha=0.8)
-                
-                # Додаємо лінії рівнів
-                axes[1, 1].contour(X, Y, Z, levels=10, colors='black', alpha=0.5, linewidths=0.5)
-                
-                # Позначаємо оптимальну точку
-                axes[1, 1].scatter(optimal[0], optimal[1], color='red', s=200, 
-                                  marker='*', edgecolor='white', linewidth=2, 
-                                  label=f'Оптимум\n({optimal[0]:.1f}, {optimal[1]:.1f})')
-                
-                axes[1, 1].set_title('Поверхня витрат', fontsize=14, fontweight='bold')
-                axes[1, 1].set_xlabel('Швидкість (од/год)', fontsize=12)
-                axes[1, 1].set_ylabel('Температура (°C)', fontsize=12)
-                axes[1, 1].legend(fontsize=10, loc='upper right')
-                axes[1, 1].grid(True, alpha=0.3, linestyle='--')
-                axes[1, 1].set_axisbelow(True)
-                
-                # Додаємо colorbar
-                cbar = plt.colorbar(contour, ax=axes[1, 1])
-                cbar.set_label('Витрати, грн', fontsize=12)
-                
-            except Exception as e:
-                print(f"Помилка при побудові поверхні витрат: {e}")
-                axes[1, 1].text(0.5, 0.5, 'Не вдалося побудувати поверхню витрат\nПеревірте параметри функції', 
-                               ha='center', va='center', transform=axes[1, 1].transAxes,
-                               fontsize=12, style='italic')
-                axes[1, 1].set_title('Поверхня витрат', fontsize=14, fontweight='bold')
+            # Використовуємо contourf для більш плавного градієнта
+            contour = axes[1, 1].contourf(X, Y, Z, levels=30, cmap='viridis', alpha=0.8)
             
-            # Додаємо загальну інформацію про оптимізацію
-            plt.figtext(0.02, 0.02, 
-                       f"Метод: {self.optimization_results.get('method', 'N/A')}\n"
-                       f"Ціль: {self.optimization_results.get('objective', 'N/A')}\n"
-                       f"Ітерації: {self.optimization_results.get('iterations', 0)}",
-                       fontsize=10, bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgray", alpha=0.7))
-
-            plt.tight_layout(rect=[0, 0.05, 1, 0.95])  # Залишаємо місце для тексту внизу
+            # Додаємо лінії рівнів
+            axes[1, 1].contour(X, Y, Z, levels=10, colors='black', alpha=0.5, linewidths=0.5)
             
-            # Збереження графіка у різних форматах
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            base_filename = f"optimization_results_{timestamp}"
+            # Позначаємо оптимальну точку
+            axes[1, 1].scatter(optimal[0], optimal[1], color='red', s=200, 
+                              marker='*', edgecolor='white', linewidth=2, 
+                              label=f'Оптимум\n({optimal[0]:.1f}, {optimal[1]:.1f})')
             
-            print(f"\n" + "="*60)
-            print("ЗБЕРЕЖЕННЯ ГРАФІКІВ")
-            print("="*60)
+            axes[1, 1].set_title('Поверхня витрат', fontsize=14, fontweight='bold')
+            axes[1, 1].set_xlabel('Швидкість (од/год)', fontsize=12)
+            axes[1, 1].set_ylabel('Температура (°C)', fontsize=12)
+            axes[1, 1].legend(fontsize=10, loc='upper right')
+            axes[1, 1].grid(True, alpha=0.3, linestyle='--')
+            axes[1, 1].set_axisbelow(True)
             
-            saved_files = []
-            
-            try:
-                # Збереження у PNG
-                png_file = f"{base_filename}.png"
-                plt.savefig(png_file, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
-                saved_files.append(png_file)
-                print(f"Збережено PNG: {png_file}")
-            except Exception as e:
-                print(f"Помилка збереження PNG: {e}")
-            
-            try:
-                # Збереження у PDF
-                pdf_file = f"{base_filename}.pdf"
-                plt.savefig(pdf_file, format='pdf', bbox_inches='tight', facecolor='white', edgecolor='none')
-                saved_files.append(pdf_file)
-                print(f"Збережено PDF: {pdf_file}")
-            except Exception as e:
-                print(f"Помилка збереження PDF: {e}")
-                
-            try:
-                # Збереження у SVG
-                svg_file = f"{base_filename}.svg"
-                plt.savefig(svg_file, format='svg', bbox_inches='tight', facecolor='white', edgecolor='none')
-                saved_files.append(svg_file)
-                print(f"Збережено SVG: {svg_file}")
-            except Exception as e:
-                print(f"Помилка збереження SVG: {e}")
-            
-            if saved_files:
-                print(f"\nФайли успішно збережено в поточній директорії:")
-                for file in saved_files:
-                    file_size = os.path.getsize(file) if os.path.exists(file) else 0
-                    print(f"  • {file} ({file_size/1024:.1f} KB)")
-                
-                print("\nДля перегляду PDF файлу відкрийте його за допомогою:")
-                print("  • Adobe Reader")
-                print("  • Браузера (Chrome, Firefox)")
-                print("  • Вбудованого PDF читача вашої ОС")
-            else:
-                print("\nНе вдалося зберегти жодного файлу")
-            
-            print(f"\n" + "="*60)
-            
-            # Спробуємо відобразити графік, якщо це можливо
-            try:
-                # Переключаємо на інтерактивний режим для показу
-                import matplotlib
-                matplotlib.use('TkAgg')  
-                print("\nСпробую відобразити графік на екрані...")
-                plt.show(block=True)  
-            except Exception as e:
-                print(f"Не вдалося відобразити графік інтерактивно: {e}")
-                print("Графік збережено у файлах, як зазначено вище.")
-            
-            # Закриваємо графік
-            plt.close('all')
+            # Додаємо colorbar
+            cbar = plt.colorbar(contour, ax=axes[1, 1])
+            cbar.set_label('Витрати, грн', fontsize=12)
             
         except Exception as e:
-            print(f"\nПомилка при візуалізації: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"Помилка при побудові поверхні витрат: {e}")
+            axes[1, 1].text(0.5, 0.5, 'Не вдалося побудувати поверхню витрат\nПеревірте параметри функції', 
+                           ha='center', va='center', transform=axes[1, 1].transAxes,
+                           fontsize=12, style='italic')
+            axes[1, 1].set_title('Поверхня витрат', fontsize=14, fontweight='bold')
+        
+        # Додаємо загальну інформацію про оптимізацію
+        plt.figtext(0.02, 0.02, 
+                   f"Метод: {self.optimization_results.get('method', 'N/A')}\n"
+                   f"Ціль: {self.optimization_results.get('objective', 'N/A')}\n"
+                   f"Ітерації: {self.optimization_results.get('iterations', 0)}",
+                   fontsize=10, bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgray", alpha=0.7))
+
+        plt.tight_layout(rect=[0, 0.05, 1, 0.95])  # Залишаємо місце для тексту внизу
+        
+        # Збереження графіка у різних форматах
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_filename = f"optimization_results_{timestamp}"
+        
+        print(f"\n" + "="*60)
+        print("ЗБЕРЕЖЕННЯ ГРАФІКІВ")
+        print("="*60)
+        
+        saved_files = []
+        
+        try:
+            # Збереження у PNG
+            png_file = f"{base_filename}.png"
+            plt.savefig(png_file, dpi=300, bbox_inches='tight', facecolor='white', edgecolor='none')
+            saved_files.append(png_file)
+            print(f"Збережено PNG: {png_file}")
+        except Exception as e:
+            print(f"Помилка збереження PNG: {e}")
+        
+        try:
+            # Збереження у PDF
+            pdf_file = f"{base_filename}.pdf"
+            plt.savefig(pdf_file, format='pdf', bbox_inches='tight', facecolor='white', edgecolor='none')
+            saved_files.append(pdf_file)
+            print(f"Збережено PDF: {pdf_file}")
+        except Exception as e:
+            print(f"Помилка збереження PDF: {e}")
+            
+        try:
+            # Збереження у SVG
+            svg_file = f"{base_filename}.svg"
+            plt.savefig(svg_file, format='svg', bbox_inches='tight', facecolor='white', edgecolor='none')
+            saved_files.append(svg_file)
+            print(f"Збережено SVG: {svg_file}")
+        except Exception as e:
+            print(f"Помилка збереження SVG: {e}")
+        
+        if saved_files:
+            print(f"\nФайли успішно збережено в поточній директорії:")
+            for file in saved_files:
+                if os.path.exists(file):
+                    file_size = os.path.getsize(file)
+                    print(f"  • {file} ({file_size/1024:.1f} KB)")
+                else:
+                    print(f"  • {file} (файл не знайдено)")
+        else:
+            print("\nНе вдалося зберегти жодного файлу")
+        
+        print(f"\n" + "="*60)
+        
+        # Спрощена спроба відобразити графік
+        try:
+            plt.show(block=False)
+            plt.pause(2)  # Показуємо на 2 секунди
+            plt.close()
+        except:
+            print("Графік збережено у файлах. Відкрийте файли для перегляду.")
+            plt.close()
+        
+    except Exception as e:
+        print(f"\nПомилка при візуалізації: {e}")
+        import traceback
+        traceback.print_exc()
     
     def save_results(self, filename=None):
         """
