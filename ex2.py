@@ -480,6 +480,8 @@ class ProductionOptimizer:
                 base_filename = f"optimization_results_{timestamp}"
             
                 print(f"\nЗбереження графіків...")
+
+                files_saved = []
             
                 # Збереження у PNG
                 try:
