@@ -411,7 +411,7 @@ class ProductionOptimizer:
                 axes[0, 0].set_ylabel('Значення')
                 axes[0, 0].grid(True, alpha=0.3)
             
-                # 2. Вплив параметрів на витрати (якщо є дані)
+                # 2. Вплив параметрів на витрати 
                 if self.data is not None and len(self.data) > 0:
                     sample_size = min(50, len(self.data))
                     sample = self.data.sample(sample_size, random_state=42)
@@ -475,50 +475,24 @@ class ProductionOptimizer:
             
                 plt.tight_layout()
             
-                # Збереження графіка у різних форматах
+                # Збереження графіка
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 base_filename = f"optimization_results_{timestamp}"
             
-                print(f"\nЗбереження графіків...")
-            
-                files_saved = []
+                print(f"\nЗбереження графіка...")
             
                 # Збереження у PNG
                 try:
                     png_file = f"{base_filename}.png"
                     plt.savefig(png_file, dpi=300, bbox_inches='tight')
-                    files_saved.append(png_file)
-                    print(f"Збережено: {png_file}")
+                    if os.path.exists(png_file):
+                        file_size = os.path.getsize(png_file) / 1024  # Розмір у KB
+                        print(f"Графік збережено: {png_file} ({file_size:.1f} KB)")
+                        print(f"Файл знаходиться в поточній директорії.")
+                    else:
+                        print(f"Не вдалося зберегти графік.")
                 except Exception as e:
-                    print(f"✗ Помилка збереження PNG: {e}")
-            
-                # Збереження у PDF
-                try:
-                    pdf_file = f"{base_filename}.pdf"
-                    plt.savefig(pdf_file, format='pdf', bbox_inches='tight')
-                    files_saved.append(pdf_file)
-                    print(f"✓ Збережено: {pdf_file}")
-                except Exception as e:
-                    print(f"Помилка збереження PDF: {e}")
-                
-                # Збереження у SVG
-                try:
-                    svg_file = f"{base_filename}.svg"
-                    plt.savefig(svg_file, format='svg', bbox_inches='tight')
-                    files_saved.append(svg_file)
-                    print(f"✓ Збережено: {svg_file}")
-                except Exception as e:
-                    print(f"✗ Помилка збереження SVG: {e}")
-            
-                if files_saved:
-                    print(f"\nГрафіки успішно збережено.")
-                    print(f"Файли знаходяться в поточній директорії:")
-                    for file in files_saved:
-                        if os.path.exists(file):
-                            file_size = os.path.getsize(file) / 1024  # Розмір у KB
-                            print(f"  • {file} ({file_size:.1f} KB)")
-                else:
-                    print("\nНе вдалося зберегти жоден файл.")
+                    print(f"Помилка збереження графіка: {e}")
             
                 # Закриваємо графік
                 plt.close()
