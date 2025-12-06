@@ -475,26 +475,41 @@ class ProductionOptimizer:
             
                 plt.tight_layout()
             
-                # Збереження графіка
+                # Збереження графіків
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 base_filename = f"optimization_results_{timestamp}"
             
-                print(f"\nЗбереження графіка...")
+                print(f"\nЗбереження графіків...")
             
                 # Збереження у PNG
                 try:
                     png_file = f"{base_filename}.png"
                     plt.savefig(png_file, dpi=300, bbox_inches='tight')
-                    if os.path.exists(png_file):
-                        file_size = os.path.getsize(png_file) / 1024  # Розмір у KB
-                        print(f"Графік збережено: {png_file} ({file_size:.1f} KB)")
-                        print(f"Файл знаходиться в поточній директорії.")
-                    else:
-                        print(f"Не вдалося зберегти графік.")
+                    files_saved.append(png_file)
+                    print(f"Збережено: {png_file}")
                 except Exception as e:
-                    print(f"Помилка збереження графіка: {e}")
+                    print(f"Помилка збереження PNG: {e}")
+                
+                # Збереження у SVG 
+                try:
+                    svg_file = f"{base_filename}.svg"
+                    plt.savefig(svg_file, format='svg', bbox_inches='tight')
+                    files_saved.append(svg_file)
+                    print(f"Збережено: {svg_file}")
+                except Exception as e:
+                    print(f"Помилка збереження SVG: {e}")
             
-                # Закриваємо графік
+                if files_saved:
+                    print(f"\nГрафіки успішно збережено.")
+                    print(f"Файли знаходяться в поточній директорії:")
+                    for file in files_saved:
+                        if os.path.exists(file):
+                            file_size = os.path.getsize(file) / 1024 
+                            print(f"  • {file} ({file_size:.1f} KB)")
+                else:
+                    print("\nНе вдалося зберегти жоден файл.")
+            
+                # Закриваємо графіки
                 plt.close()
             
             except Exception as e:
@@ -1148,11 +1163,11 @@ Q(x2, x3) функція штрафу за якість
 8. Збереження результатів:
 - Експорт результатів у JSON формат
 - Генерація текстового звіту
-- Збереження графіка у файл
+- Збереження графіків у файли
 
 9. Взаємодія з користувачем:
 - Меню для вибору операцій
-- Введення користувацьких параметрів.
+- Введення користувацьких параметрів
 - Інформування про хід виконання
 - Обробка помилок та виключних ситуацій
 """
