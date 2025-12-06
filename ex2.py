@@ -728,7 +728,7 @@ def main():
                 use_custom = input("Використати користувацькі параметри? (так/ні): ").strip().lower()
                 user_params = None
                 
-                if use_custom in ['ні', 'н']:
+                if use_custom in ['так', 'т']:
                     try:
                         cost_coeff = list(map(float, input("Коефіцієнти витрат (3 числа через пробіл): ").split()))
                         quality_params = list(map(float, input("Параметри якості (2 числа через пробіл): ").split()))
@@ -819,7 +819,7 @@ def main():
                                         'production_cost': optimal_cost
                                     }
         
-                                    print(f"\n✓ ОПТИМІЗАЦІЯ УСПІШНА (BFGS)")
+                                    print(f"\nОПТИМІЗАЦІЯ УСПІШНА (BFGS)")
                                     
                                     all_results.append({
                                         'method': method,
@@ -884,7 +884,7 @@ def main():
                 use_custom = input("Використати користувацькі параметри? (так/ні): ").strip().lower()
                 user_params = None
                 
-                if use_custom in ['ні', 'н']:
+                if use_custom in ['так', 'т']:
                     try:
                         # Для прибутку потрібні коефіцієнти цін та витрат
                         price_coeff = list(map(float, input("Коефіцієнти цін (3 числа через пробіл): ").split()))
